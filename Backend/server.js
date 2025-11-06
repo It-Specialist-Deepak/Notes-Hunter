@@ -18,10 +18,15 @@ app.use(
   })
 );
 // Import routes
-const AuthRoute = require("./routes/auth/Auth.router");
+const AuthRoute = require("./routes/auth/auth.route");
+const NoteRoute = require("./routes/Notes/notes.route");
+const CommentRoute = require("./routes/comments/comments.route");
 
 // Routes
 app.use("/api/v1/user", AuthRoute);
+app.use("/api/v1/notes", NoteRoute);
+app.use("/api/v1/comments", CommentRoute);
+
 
 // Test route
 app.get("/", (req, res) => {
