@@ -3,15 +3,13 @@ const s3 = require("../../config/S3.js");
 const Note = require("../../models/NotesModel/notes.model.js");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const User = require("../../models/user.model.js")
 
 
 module.exports.uploadNote = async (req, res) => {
   try {
-    const { title, description, subject, category, type, subcategory, pages } =
-      req.body;
-    console.log(req.body);
+    const { title, description, subject, category, type, subcategory, pages } = req.body;
     const file = req.file;
-
     // Double-check (in case no file is uploaded)
     if (!file) {
       return res.status(400).json({ message: "Please upload a PDF file." });
@@ -45,7 +43,6 @@ module.exports.uploadNote = async (req, res) => {
       fileUrl,
       fileName
     });
-    console.log(note);
     await note.save();
 
     res.status(201).json({
@@ -60,6 +57,40 @@ module.exports.uploadNote = async (req, res) => {
     });
   }
 };
+
+module.exports.getAllNotes = async (req, res) => {
+  try {
+    // 1️⃣ Extract query params with defaults
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
+    // 2️⃣ Fetch paginated notes
+    const notes = await Note.find()
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // newest first
+
+    // 3️⃣ Get total count for pagination metadata
+    const totalNotes = await Note.countDocuments();
+
+    // 4️⃣ Calculate total pages
+    const totalPages = Math.ceil(totalNotes / limit);
+
+    // 5️⃣ Send response
+    res.status(200).json({
+      success: true,
+      page,
+      totalPages,
+      totalNotes,
+      notes,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports.GetNotes = async (req, res) => {
   try {
     const { category, subcategory } = req.query;
@@ -133,5 +164,90 @@ module.exports.DownloadNotes = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error generating download link" });
+  }
+};
+
+
+module.exports.SaveNote = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+    const user = await User.findById(req.user._id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Check if note exists
+    const noteExists = await Note.findById(noteId);
+    if (!noteExists)
+      return res.status(404).json({ message: "Notes not found" });
+
+    // Check if note is already saved
+    const alreadySaved = user.savedNotes.includes(noteId);
+
+    if (alreadySaved) {
+      // Remove note from saved list
+      user.savedNotes = user.savedNotes.filter(
+        (id) => id.toString() !== noteId.toString()
+      );
+      await user.save();
+      return res.json({
+        message: "Notes removed from saved list",
+        saved: false,
+      });
+    } else {
+      // Add note to saved list
+      user.savedNotes.push(noteId);
+      await user.save();
+      return res.json({
+        message: "Notes saved successfully",
+        saved: true,
+      });
+    }
+  } catch (error) {
+    console.error("Toggle Save Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports.getSavedNotes = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate("savedNotes");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user.savedNotes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+module.exports.getRecommendedNotes = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+
+    // 1️⃣ Find the current note
+    const note = await Note.findById(noteId);
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    // 2️⃣ Find notes with the same subcategory (exclude current note)
+    const recommendedNotes = await Note.find({
+      subcategory: note.subcategory,
+      _id: { $ne: note._id },
+    })
+      .limit(5) // show top 5 recommendations
+      .sort({ createdAt: -1 }); // newest first
+
+    // 3️⃣ Return recommended notes
+    res.status(200).json({
+      success: true,
+      subcategory: note.subcategory,
+      total: recommendedNotes.length,
+      recommendedNotes,
+    });
+  } catch (error) {
+    console.error("Error fetching recommended notes:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
