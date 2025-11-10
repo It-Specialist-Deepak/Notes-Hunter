@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
       default: "student",
     },
     savedNotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Note" }],
-    savedPapers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Paper" }],
+    savedPapers: [{ type: mongoose.Schema.Types.ObjectId, ref: "PreviousYearPaper" }],
   },
   { timestamps: true }
 );

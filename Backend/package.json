@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "seed:notes": "node scripts/LoadNotes.js",
+    "seed:paper": "node scripts/LoadPaper.js",
     "dev": "nodemon server.js"
   },
   "author": "Deepak Rathore",
