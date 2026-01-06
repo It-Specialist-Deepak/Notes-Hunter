@@ -4,7 +4,7 @@ const { addComment , getComments , deleteComment} = require("../../controllers/C
 const verifyToken = require("../../middleware/verifyToken.middleware");
 
 router.post("/add-comment/:noteId" , verifyToken , addComment);
-router.post("/get-comment/:noteId" , getComments);
-router.post("/delete-comment/:noteId/:commentId" , verifyToken , deleteComment)
+router.get("/get-comment/:noteId" , getComments);
+router.delete("/delete-comment/:noteId/:commentId" , verifyToken , deleteComment)
 
 module.exports = router ;

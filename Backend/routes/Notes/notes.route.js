@@ -1,12 +1,17 @@
 const express = require("express")
-const  upload = require( "../../config/multer.js");
-const { uploadNote , GetNotes , LikeNotes , DownloadNotes , SaveNote , getSavedNotes , getAllNotes , getRecommendedNotes } = require( "../../controllers/Notes/notes.controller.js");
+const { uploadNote , PreviewNotes , GetAllCategories ,GetNotesByCategory , LikeNotes , DownloadNotes , SaveNote , getSavedNotes , getAllNotes , getRecommendedNotes } = require( "../../controllers/Notes/notes.controller.js");
 const uploadMiddleware = require("../../middleware/upload.middleware.js")
 const verifyToken = require( "../../middleware/verifyToken.middleware.js")
+const adminAuthMiddleware = require("../../middleware/adminAuth.middleware.js")
 const router = express.Router();
 
-router.post("/upload", uploadMiddleware, uploadNote);
-router.get("/getnotes" , GetNotes);
+router.post("/upload", uploadMiddleware, adminAuthMiddleware , uploadNote);
+// Notes by category
+router.get("/preview-notes/:noteId" , PreviewNotes);
+router.get("/get-category" , GetAllCategories);
+router.get("/getnotes-byCategory/:category" , GetNotesByCategory);
+
+// gets all notes
 router.get("/get-allnotes", getAllNotes);
 router.patch("/likeNotes", verifyToken , LikeNotes);
 router.post("/download-notes/:noteId", DownloadNotes);

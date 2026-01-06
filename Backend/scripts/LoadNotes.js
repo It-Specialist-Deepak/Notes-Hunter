@@ -25,7 +25,7 @@ function randomInt(min, max) {
 }
 
 // --- Create Fake Notes ---
-const generateNotes = (count = 20) => {
+const generateNotes = (count = 50) => {
   const notes = [];
   for (let i = 0; i < count; i++) {
     notes.push({
@@ -51,7 +51,8 @@ const generateNotes = (count = 20) => {
 async function seedNotes() {
   try {
     await Note.deleteMany(); // clear old data
-    const notes = generateNotes(25); // create 25 sample notes
+    const notes = generateNotes(50); // create 25 sample notes
+    console.log(notes)
     await Note.insertMany(notes);
     console.log(`✅ ${notes.length} notes inserted successfully`);
   } catch (err) {

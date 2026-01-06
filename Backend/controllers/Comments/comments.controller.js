@@ -49,6 +49,7 @@ module.exports.addComment = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 module.exports.getComments = async (req, res) => {
   try {
     const { noteId } = req.params;
@@ -66,6 +67,7 @@ module.exports.getComments = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 module.exports.deleteComment = async (req, res) => {
   try {
     const { noteId, commentId } = req.params;

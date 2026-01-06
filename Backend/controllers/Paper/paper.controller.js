@@ -81,25 +81,27 @@ module.exports.AllUniversities = async (req, res) => {
 
 module.exports.AlluniversityCourse = async (req, res) => {
   try {
-    const { university } = req.query;
+    const { university } = req.params;
 
     if (!university) {
       return res.status(400).json({
         success: false,
-        message: "University name is required in query parameters",
+        message: "University parameter is required",
       });
     }
 
-    // Fetch distinct courses based on the selected university
-    const courses = await PreviousYearPaper.distinct("course", { university });
+    // Fetch distinct courses for the selected university
+    const courses = await PreviousYearPaper.distinct("course", {
+      university,
+    });
 
     // Sort alphabetically
     courses.sort((a, b) => a.localeCompare(b));
 
     res.status(200).json({
       success: true,
-      count: courses.length,
       university,
+      count: courses.length,
       courses,
     });
   } catch (error) {
@@ -110,90 +112,86 @@ module.exports.AlluniversityCourse = async (req, res) => {
     });
   }
 };
+
 module.exports.CategoriesByCourse = async (req, res) => {
   try {
-    const { university, course } = req.query;
+    const { university, course } = req.params;
 
     if (!university || !course) {
       return res.status(400).json({
         success: false,
-        message: "Both 'university' and 'course' query parameters are required",
+        message: "University and course parameters are required",
       });
     }
 
-    const uni = university.trim();
-    const crs = course.trim();
+    // Express already decodes URL params
+    // university -> "delhi university"
+    // course -> "bachelor of technology"
 
-    // Case-insensitive distinct query
     const categories = await PreviousYearPaper.distinct("category", {
-      university: { $regex: new RegExp(`^${uni}$`, "i") },
-      course: { $regex: new RegExp(`^${crs}$`, "i") },
+      university: university.trim(),
+      course: course.trim(),
     });
 
     if (!categories.length) {
       return res.status(404).json({
         success: false,
-        message: `No categories found for course '${course}' at '${university}'`,
+        message: `No categories found for '${course}' at '${university}'`,
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       university,
       course,
       count: categories.length,
       categories: categories.sort(),
     });
+
   } catch (error) {
     console.error("Error fetching categories:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error while fetching categories",
     });
   }
 };
 
-
-
 module.exports.GetPapersByUniversityCourseCategory = async (req, res) => {
   try {
-    const { university, course, category } = req.query;
+    const { university, course, category } = req.params;
 
-    // Validation
     if (!university || !course || !category) {
       return res.status(400).json({
         success: false,
-        message: "Query parameters 'university', 'course' and 'category' are required",
+        message: "University, course and category parameters are required",
       });
     }
 
-    // Trim values
-    const uni = university.trim();
-    const crs = course.trim();
-    const cat = category.trim();
+    // Convert slugs → readable text
+    const uni = university.replace(/-/g, " ").trim();
+    const crs = course.replace(/-/g, " ").trim();
+    const cat = category.replace(/-/g, " ").trim();
 
-    // Case-insensitive filter
     const papers = await PreviousYearPaper.find({
       university: { $regex: new RegExp(`^${uni}$`, "i") },
       course: { $regex: new RegExp(`^${crs}$`, "i") },
       category: { $regex: new RegExp(`^${cat}$`, "i") },
-    }).sort({ year: -1, semester: 1 }); // optional sorting by year desc
+    }).sort({ year: -1, semester: 1 });
 
-    // Check if no papers found
     if (!papers.length) {
       return res.status(404).json({
         success: false,
-        message: `No papers found for '${category}' in course '${course}' at '${university}'`,
+        message: `No papers found for '${cat}' in '${crs}' at '${uni}'`,
       });
     }
 
-    // Success
     res.status(200).json({
       success: true,
       count: papers.length,
-      university,
-      course,
-      category,
+      university: uni,
+      course: crs,
+      category: cat,
       papers,
     });
   } catch (error) {
@@ -204,6 +202,7 @@ module.exports.GetPapersByUniversityCourseCategory = async (req, res) => {
     });
   }
 };
+
 // controllers by category
 
 module.exports.GetAllCategories = async (req, res) => {
@@ -236,10 +235,12 @@ module.exports.GetAllCategories = async (req, res) => {
     });
   }
 };
+// Assuming you are using Express.js
+// Route example: GET /api/papers/:category?page=1&limit=12
 
 module.exports.GetPapersByCategory = async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category } = req.params; // now from route params
     const page = parseInt(req.query.page) || 1;  // default page 1
     const limit = parseInt(req.query.limit) || 12; // default 12 per page
     const skip = (page - 1) * limit;
@@ -248,7 +249,7 @@ module.exports.GetPapersByCategory = async (req, res) => {
     if (!category) {
       return res.status(400).json({
         success: false,
-        message: "Category query parameter is required",
+        message: "Category parameter is required",
       });
     }
 
@@ -256,17 +257,13 @@ module.exports.GetPapersByCategory = async (req, res) => {
     const cat = category.trim().toLowerCase();
 
     // Fetch papers for given category with pagination
-    const papers = await PreviousYearPaper.find({
-      category: cat,
-    })
+    const papers = await PreviousYearPaper.find({ category: cat })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }); // newest first
 
     // Total count for pagination
-    const totalPapers = await PreviousYearPaper.countDocuments({
-      category: cat,
-    });
+    const totalPapers = await PreviousYearPaper.countDocuments({ category: cat });
 
     // Handle empty results
     if (!papers.length) {
@@ -294,7 +291,6 @@ module.exports.GetPapersByCategory = async (req, res) => {
     });
   }
 };
-
 
 module.exports.LikePapers = async (req, res) => {
   try {

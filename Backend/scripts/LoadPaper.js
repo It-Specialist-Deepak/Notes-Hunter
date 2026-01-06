@@ -114,7 +114,7 @@ const universities = [
 const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const examTypes = ["midterm", "endterm", "supplementary"];
 const paperTypes = ["question-paper", "solution", "both"];
-const engineeringCourses = ["B.Tech", "M.Tech"];
+const engineeringCourses = ["Bachelor of Technology", "Master of Technology"  , "Bachelor of Science"];
 
 // Utility
 function getRandomItem(arr) {

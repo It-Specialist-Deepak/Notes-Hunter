@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const s3 = require("../../config/S3.js");
 const Note = require("../../models/NotesModel/notes.model.js");
@@ -58,6 +59,41 @@ module.exports.uploadNote = async (req, res) => {
   }
 };
 
+module.exports.PreviewNotes = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+
+    // ✅ Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(noteId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid note ID",
+      });
+    }
+
+    const note = await Note.findById(noteId);
+
+    if (!note) {
+      return res.status(404).json({
+        success: false,
+        message: "Note not found",
+      });
+    }
+     // ✅ Total comments (embedded schema)
+    const totalComments = note.comments.length;
+    res.status(200).json({
+      success: true,
+      totalComments,
+      data: note,
+    });
+  } catch (error) {
+    console.error("Get Note Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
 module.exports.getAllNotes = async (req, res) => {
   try {
     // 1️⃣ Extract query params with defaults
@@ -91,53 +127,106 @@ module.exports.getAllNotes = async (req, res) => {
   }
 };
 
-module.exports.GetNotes = async (req, res) => {
+module.exports.GetAllCategories = async (req, res) => {
   try {
-    const { category, subcategory } = req.query;
+    const categories = await Note.distinct("category");
+
+    res.status(200).json({
+      success: true,
+      data: categories,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching categories",
+    });
+  }
+};
+
+module.exports.GetNotesByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+
+    // pagination params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
     let query = {};
 
     if (category) query.category = category;
-    if (subcategory) query.subcategory = subcategory;
+   
 
-    const notes = await Note.find(query);
-    res.json(notes);
+    // fetch notes with pagination
+    const notes = await Note.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // optional sorting
+    // total count for pagination
+    const totalNotes = await Note.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      totalPages: Math.ceil(totalNotes / limit),
+      totalNotes,
+      count: notes.length,
+      data: notes,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching notes" });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching notes",
+    });
   }
 };
 
 module.exports.LikeNotes = async (req, res) => {
   try {
-    const userId = req.user.id; // from token 
-    const { noteId } = req.body; // now from body
+    const { noteId, userId } = req.body; // ✅ get from body
 
-    if (!noteId) {
-      return res.status(400).json({ message: "Note ID is required" });
+    if (!noteId || !userId) {
+      return res.status(400).json({
+        message: "noteId and userId are required",
+      });
     }
 
     const note = await Note.findById(noteId);
-    if (!note) return res.status(404).json({ message: "Note not found" });
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
 
-    const alreadyLiked = note.likedBy.includes(userId);
+    const alreadyLiked = note.likedBy.some(
+      (id) => id.toString() === userId
+    );
 
     if (alreadyLiked) {
-      // ✅ Unlike
+      // ✅ UNLIKE
+      note.likedBy = note.likedBy.filter(
+        (id) => id.toString() !== userId
+      );
       note.likes = Math.max(note.likes - 1, 0);
-      note.likedBy = note.likedBy.filter(id => id.toString() !== userId);
-      await note.save();
-      return res.json({ message: "Unliked successfully", likes: note.likes });
     } else {
-      // ✅ Like
-      note.likes += 1;
+      // ✅ LIKE
       note.likedBy.push(userId);
-      await note.save();
-      return res.json({ message: "Liked successfully", likes: note.likes });
+      note.likes += 1;
     }
+
+    await note.save();
+
+    res.status(200).json({
+      success: true,
+      liked: !alreadyLiked,
+      likes: note.likes,
+      likedBy: note.likedBy,
+    });
   } catch (error) {
     console.error("Error toggling like:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 module.exports.DownloadNotes = async (req, res) => {
   try {
