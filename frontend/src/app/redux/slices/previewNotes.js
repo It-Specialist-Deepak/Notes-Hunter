@@ -28,10 +28,13 @@ export const toggleLikeNote = createAsyncThunk(
       
       const userId = localStorage.getItem("userId"); // ✅ get userId
 
-      if (!userId) {
-        throw new Error("User not logged in");
-      }
-
+     
+         if (!userId) {
+      return rejectWithValue({
+        message: "You need to Login First",
+        status: 401,
+      });
+    }
       const res = await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/notes/likeNotes`,
         { noteId, userId }, // ✅ SEND BOTH
@@ -48,8 +51,23 @@ export const toggleLikeNote = createAsyncThunk(
     }
   }
 );
+// download notes api call
+export const downloadNote = createAsyncThunk(
+  "/notes/download",
+  async (noteId, { rejectWithValue }) => {
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/notes/download-notes/${noteId}`,
+      );
 
-
+      return res.data.downloadUrl;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Download failed"
+      );
+    }
+  }
+);
 /* ===================== SLICE ===================== */
 const noteSlice = createSlice({
   name: "notes",
@@ -104,6 +122,19 @@ const noteSlice = createSlice({
       })
       .addCase(toggleLikeNote.rejected, (state, action) => {
         state.likeLoading = false;
+         state.error = action.payload || { message: action.error.message };
+        console.log(action.payload)
+      })
+      // download
+      .addCase(downloadNote.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(downloadNote.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(downloadNote.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload;
       });
   },

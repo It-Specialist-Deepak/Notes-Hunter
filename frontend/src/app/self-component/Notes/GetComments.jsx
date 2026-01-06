@@ -9,7 +9,7 @@ import DeleteCommentButton from "./DeleteCommentButton";
 const CommentsSection = ({ noteId , userId , role }) => {
   const dispatch = useDispatch();
 
-  const { comments, loading, error } = useSelector(
+  const { comments, loading } = useSelector(
     (state) => state.comments
   );
 
@@ -30,22 +30,17 @@ const CommentsSection = ({ noteId , userId , role }) => {
 
       {/* Loading */}
       {loading && (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
+        <div className="space-y-3 mt-4  mb-5">
+          {[1].map((i) => (
             <div
               key={i}
-              className="h-16 rounded-xl bg-white/10 animate-pulse"
+              className="h-20 rounded-xl bg-white/10 animate-pulse"
             />
           ))}
         </div>
       )}
 
-      {/* Error */}
-      {error && (
-        <p className="text-red-400 text-sm mt-4">
-          {error}
-        </p>
-      )}
+      
 
       {/* Empty */}
       {!loading && comments.length === 0 && (

@@ -11,7 +11,7 @@ const verifyToken = async (req, res, next) => {
     if (!token) {
       return res
         .status(401)
-        .json({ message: "Access Denied. No token provided." });
+        .json({ message: "You need to Login First" });
     }
 
     // 2️⃣ Check blacklist

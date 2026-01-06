@@ -6,14 +6,14 @@ import { useSearchParams } from "next/navigation";
 import { Download } from "lucide-react";
 import {
   FaClock,
-  FaEye,
   FaDownload,
   FaHeart,
   FaFileAlt,
+  FaComment,
 } from "react-icons/fa";
 import dynamic from "next/dynamic";
-import { useDispatch } from "react-redux";
-import { setPreviewNoteId } from "../../redux/slices/previewNotes";
+import { useDispatch, useSelector } from "react-redux";
+import { setPreviewNoteId, downloadNote } from "../../redux/slices/previewNotes";
 import { useRouter } from "next/navigation";
 
 
@@ -34,12 +34,32 @@ function NotesSection() {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const router = useRouter();
+  const downloadLoading = useSelector(
+    (state) => state?.previewNotes?.loading ?? false
+  );
 
- const handlePreview = (note) => {
-  console.log("Previewing note:", note._id);
-  dispatch(setPreviewNoteId(note._id)); // ✅ ID only (SAFE)
-  router.push(`/browse-notes/${note._id}`); // ✅ URL source of truth
-};
+
+
+  // download function
+  const handleDownload = async (note_id) => {
+    console.log("downloading ", note_id)
+    const result = await dispatch(downloadNote(note_id));
+    if (downloadNote.fulfilled.match(result)) {
+      const url = result.payload;
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.click();
+    }
+    if (downloadNote.rejected.match(result)) {
+      console.error("Download failed:", result.payload);
+    }
+  };
+  // preview function
+  const handlePreview = (note) => {
+    dispatch(setPreviewNoteId(note._id)); // ✅ ID only (SAFE)
+    router.push(`/browse-notes/${note._id}`); // ✅ URL source of truth
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -100,9 +120,10 @@ to-[#061622] text-gray-200 text-xs px-3 py-1 rounded-full capitalize">
               </h3>
 
               {/* Description */}
-              <p className="text-gray-400 text-sm mb-4 line-clamp-3">
-                {note.description}
-              </p>
+             <p className="text-gray-400 text-sm mb-4 line-clamp-1">
+  {note.description}
+</p>
+
 
               {/* Meta */}
               <div className="flex items-center gap-4 text-gray-400 text-xs mb-4">
@@ -116,9 +137,7 @@ to-[#061622] text-gray-200 text-xs px-3 py-1 rounded-full capitalize">
 
               {/* Stats */}
               <div className="flex items-center gap-4 text-gray-400 text-xs mb-5">
-                <div className="flex items-center gap-1">
-                  <FaEye /> —
-                </div>
+               
                 <div className="flex items-center gap-1">
                   <FaDownload /> {note.downloads}
                 </div>
@@ -126,27 +145,29 @@ to-[#061622] text-gray-200 text-xs px-3 py-1 rounded-full capitalize">
                   <FaHeart /> {note.likes}
                 </div>
               </div>
-              
+
               {/* Actions */}
               <div className="flex items-center gap-3">
-               <button
-    onClick={() => handlePreview(note)}
-    className="text-teal-500 text-sm font-medium hover:underline"
-  >
-    Preview
-  </button>
-                <a
-                  href={note.fileUrl}
-                  download={note.fileName}
+                <button
+                  onClick={() => handlePreview(note)}
+                  className="text-teal-500 text-sm font-medium hover:underline cursor-pointer"
+                >
+                  Preview
+                </button>
+                <button
+                  onClick={() => handleDownload(note._id)}
+                  disabled={downloadLoading}
                   className="ml-auto inline-flex items-center gap-2
-                               px-4 py-2 rounded-xl border-2 border-teal-500
-                               text-teal-600 text-sm font-semibold
-                             hover:bg-gradient-to-r hover:from-emerald-500 hover:to-teal-500 hover:text-white
-                               transition-all duration-300"
+             px-4 py-2 rounded-xl border-2 border-teal-500
+             text-teal-600 text-sm font-semibold
+             hover:bg-gradient-to-r hover:from-emerald-500 hover:to-teal-500 hover:text-white
+             transition-all duration-300
+             disabled:opacity-50"
                 >
                   <Download size={16} />
-                  Download
-                </a>
+                  {downloadLoading ? "Downloading..." : "Download"}
+                </button>
+
               </div>
             </div>
           ))

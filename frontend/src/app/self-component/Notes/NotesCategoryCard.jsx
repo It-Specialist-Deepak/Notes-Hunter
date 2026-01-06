@@ -106,7 +106,7 @@ function NotesCategoryCard() {
               </h3>
 
               {/* Description */}
-              <p className="text-gray-400 text-sm mb-4 line-clamp-3">
+              <p className="text-gray-400 text-sm mb-4 line-clamp-1">
                 {note.description}
               </p>
 
@@ -122,9 +122,7 @@ function NotesCategoryCard() {
 
               {/* Stats */}
               <div className="flex items-center gap-4 text-gray-400 text-xs mb-5">
-                <div className="flex items-center gap-1">
-                  <FaEye /> —
-                </div>
+                
                 <div className="flex items-center gap-1">
                   <FaDownload /> {note.downloads}
                 </div>

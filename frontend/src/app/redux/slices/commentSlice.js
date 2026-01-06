@@ -51,10 +51,14 @@ export const deleteComment = createAsyncThunk(
       );
 
       return commentId; // return deleted comment id
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to delete comment"
-      );
+    } catch (error) {
+      return rejectWithValue({
+        message:
+          error.response?.status === 401
+            ? "Please login to comment"
+            : error.response?.data?.message || "Failed to add comment",
+        status: error.response?.status,
+      });
     }
   }
 );
@@ -73,6 +77,9 @@ const commentsSlice = createSlice({
     clearComments: (state) => {
       state.comments = [];
     },
+    clearCommentError: (state) => {
+    state.error = null;
+  },
   },
   extraReducers: (builder) => {
   builder
@@ -88,7 +95,7 @@ const commentsSlice = createSlice({
     })
     .addCase(getComments.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload;
+       state.error = action.payload?.message || "Something went wrong";
     })
 
     /* ===== ADD COMMENT ===== */
@@ -114,5 +121,5 @@ const commentsSlice = createSlice({
 
 });
 
-export const { clearComments } = commentsSlice.actions;
+export const { clearComments , clearCommentError } = commentsSlice.actions;
 export default commentsSlice.reducer;

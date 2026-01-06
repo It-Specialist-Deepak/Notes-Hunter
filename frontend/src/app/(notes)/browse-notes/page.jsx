@@ -5,9 +5,9 @@ import NotesCard from "../../self-component/Notes/NotesCard"
 import { Search, FileText, Download, Eye } from "lucide-react";
 
 const stats = [
-    { icon: FileText, value: "725", label: "Total Notes" },
+    { icon: FileText, value: "100+", label: "Total Notes" },
     { icon: Download, value: "3,887", label: "Downloads" },
-    { icon: Eye, value: "19,627", label: "Views" },
+    { icon: Eye, value: "10,627", label: "Views" },
 ];
 
 const notes = Array.from({ length: 8 });

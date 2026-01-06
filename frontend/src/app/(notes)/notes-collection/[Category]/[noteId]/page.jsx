@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "next/navigation";
-import { fetchPreviewNote, toggleLikeNote } from "../../../../redux/slices/previewNotes";
+import { useParams , useRouter } from "next/navigation";
+import { fetchPreviewNote, toggleLikeNote ,  downloadNote } from "../../../../redux/slices/previewNotes";
 
 import {
   FaFileAlt,
@@ -19,23 +19,20 @@ import BreadcumbCollectionPreview from "@/app/self-component/Notes/Breadcumb-col
 export default function NotePreview() {
   const { noteId } = useParams();
   const dispatch = useDispatch();
+   const router = useRouter();
   const [userId, setUserId] = useState(null);
   const [role, setRole] = useState(null);
-
+   const [showError, setShowError] = useState(false);
+    // ✅ MATCH store key
+  const { previewNote, previewNoteId, totalComments, loading, likeLoading , error } = useSelector(
+    (state) => state.previewNotes
+  );
   useEffect(() => {
     setUserId(localStorage.getItem("userId"));
     setRole(localStorage.getItem("role"));
   }, []);
-  const Stat = ({ icon, value }) => (
-    <div className="flex items-center gap-2 bg-white/5 rounded-xl px-4 py-3">
-      <span className="text-teal-400 text-lg">{icon}</span>
-      <span className="font-medium">{value}</span>
-    </div>
-  );
-  // ✅ MATCH store key
-  const { previewNote, previewNoteId, totalComments, loading, likeLoading } = useSelector(
-    (state) => state.previewNotes
-  );
+ 
+
 
   useEffect(() => {
     const id = noteId || previewNoteId;
@@ -47,9 +44,37 @@ export default function NotePreview() {
   const isLiked = previewNote?.likedBy?.some(
     (id) => String(id) === String(userId)
   );
-
-
-
+    // Like handler
+    const handleLike = async () => {
+      const result = await dispatch(toggleLikeNote(noteId));
+  
+      if (toggleLikeNote.rejected.match(result)) {
+        if (result.payload?.status === 401) {
+          // Redirect to login if not logged in
+          router.push("/login");
+        }
+      }
+    };
+     // Download handler
+     const handleDownload = async () => {
+       const result = await dispatch(downloadNote(noteId));
+       if (downloadNote.fulfilled.match(result)) {
+         const url = result.payload;
+         const link = document.createElement("a");
+         link.href = url;
+         link.target = "_blank";
+         link.click();
+       }
+       if (downloadNote.rejected.match(result)) {
+         console.error("Download failed:", result.payload);
+       }
+     };
+ const Stat = ({ icon, value }) => (
+    <div className="flex items-center gap-2 bg-white/5 rounded-xl px-4 py-3">
+      <span className="text-teal-400 text-lg">{icon}</span>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
   // ✅ Loading state
   if (loading) {
     return (<div className="min-h-screen bg-gradient-to-br from-[#081a2d] via-[#0b3a4a] to-[#061622] text-white">
@@ -87,6 +112,14 @@ export default function NotePreview() {
   return (
     <>
       <div className=" w-full bg-gradient-to-br from-[#0b1120] via-[#0e1628] to-[#0b1120] text-white py-24 px-4">
+          {/* Error toast */}
+      {showError && error && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <p className="text-red-500 text-sm bg-red-100/20 border border-red-400 px-5 py-3 rounded-xl shadow-lg">
+            {error.message || error}
+          </p>
+        </div>
+      )}
         <div className="max-w-6xl mx-auto">
           <div className="mb-4" >
             <BreadcumbCollectionPreview previewNotes={{ title: previewNote.title }} category={previewNote.category} />
@@ -138,35 +171,28 @@ export default function NotePreview() {
 
             {/* Actions */}
             <div className="flex items-center justify-between px-6 sm:px-10 py-6">
+             <button
+              onClick={handleLike}
+              disabled={likeLoading}
+              className="flex items-center gap-2 transition"
+            >
+              <FaHeart
+                className={`text-lg cursor-pointer transition-all duration-300 ease-out ${
+                  isLiked
+                    ? "text-pink-500 scale-110 drop-shadow-[0_0_6px_rgba(236,72,153,0.7)]"
+                    : "text-white hover:scale-110"
+                }`}
+              />
+              <span className="font-medium">{previewNote.likes}</span>
+            </button>
+
               <button
-                onClick={() => dispatch(toggleLikeNote(previewNote._id))}
-                disabled={likeLoading}
-                className="flex items-center gap-2 transition"
-              >
-                <FaHeart
-                  className={`
-    text-lg cursor-pointer
-    transition-all duration-300 ease-out
-    ${isLiked
-                      ? "text-pink-500 scale-110 drop-shadow-[0_0_6px_rgba(236,72,153,0.7)]"
-                      : "text-white hover:scale-110"
-                    }
-  `}
-                />
-
-
-                <span className="font-medium">{previewNote.likes}</span>
-              </button>
-
-
-              <a
-                href={previewNote.fileUrl}
-                download
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-500 text-sm font-semibold hover:scale-105 hover:shadow-lg transition"
-              >
-                <FaDownload />
-                Download Notes
-              </a>
+              onClick={handleDownload}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-500 text-sm font-semibold hover:scale-105 hover:shadow-lg transition"
+            >
+              <FaDownload />
+              Download Notes
+            </button>
             </div>
 
           </div>

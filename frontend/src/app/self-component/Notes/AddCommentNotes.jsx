@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState , useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addComment } from "../../redux/slices/commentSlice";
+import { addComment , clearCommentError } from "../../redux/slices/commentSlice";
 import { FaPaperPlane, FaUserCircle } from "react-icons/fa";
 
 const CommentBox = ({ noteId }) => {
@@ -10,11 +10,28 @@ const CommentBox = ({ noteId }) => {
     const { comments, loading, error } = useSelector((state) => state.comments);
 
     const [text, setText] = useState("");
+const [showError, setShowError] = useState(false);
+
+useEffect(() => {
+  if (!error) return;
+
+  setShowError(true);
+
+  const timer = setTimeout(() => {
+    setShowError(false);
+  }, 4000);
+
+  return () => clearTimeout(timer);
+}, [error]);
+
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!text.trim()) return;
-
+       
+  // 🔥 clear old error BEFORE retry
+  dispatch(clearCommentError());
         dispatch(addComment({ noteId, text }));
         setText("");
     };
@@ -56,7 +73,7 @@ const CommentBox = ({ noteId }) => {
                  shadow-lg
                  hover:opacity-90
                  disabled:opacity-60
-                 transition"
+                 transition cursor-pointer"
     >
       <FaPaperPlane className="text-sm" />
       <span className="hidden sm:inline">
@@ -66,7 +83,24 @@ const CommentBox = ({ noteId }) => {
   </div>
 </form>
             {/* Error */}
-            {error && <p className="text-red-400 mt-2">{error}</p>}
+           {showError && (
+  <div className="fixed bottom-6 right-6 z-50">
+    <div
+      className="flex items-center gap-3
+                 bg-red-500/15 backdrop-blur-xl
+                 border border-red-500/30
+                 text-red-300 text-sm
+                 px-5 py-3 rounded-xl
+                 shadow-2xl
+                 animate-slide-up"
+    >
+      <span className="font-medium">
+        {error}
+      </span>
+    </div>
+  </div>
+)}
+
         </div>
     );
 };
