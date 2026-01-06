@@ -24,7 +24,7 @@ const HomeCardSkeleton = dynamic(
 );
 import Pagination from "./HomeNotesPagination";
 
-function NotesSection() {
+function NotesSection({searchQuery, category}) {
 
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
@@ -42,7 +42,6 @@ function NotesSection() {
 
   // download function
   const handleDownload = async (note_id) => {
-    console.log("downloading ", note_id)
     const result = await dispatch(downloadNote(note_id));
     if (downloadNote.fulfilled.match(result)) {
       const url = result.payload;
@@ -67,8 +66,15 @@ function NotesSection() {
     const fetchNotes = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/notes/get-allnotes?page=${page}&limit=12`
-        );
+        `${process.env.NEXT_PUBLIC_API_URL}/notes/get-allnotes`,
+        {
+          params: {
+            page,
+            limit: 12,
+            search: searchQuery || "",
+          },
+        }
+      );
 
         if (!isMounted) return;
 
@@ -86,13 +92,16 @@ function NotesSection() {
     return () => {
       isMounted = false;
     };
-  }, [page]);
+  }, [page , searchQuery]);
+  useEffect(() => {
+  router.push("?page=1");
+}, [searchQuery]);
 
   return (
     <>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {loading ? (
           <HomeCardSkeleton count={8} />
         ) : (

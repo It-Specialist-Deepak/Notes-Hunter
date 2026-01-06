@@ -94,21 +94,30 @@ module.exports.PreviewNotes = async (req, res) => {
     });
   }
 };
+
 module.exports.getAllNotes = async (req, res) => {
   try {
     // 1️⃣ Extract query params with defaults
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
-
+     const search = req.query.search || "";
+       const filter = search
+      ? {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
     // 2️⃣ Fetch paginated notes
-    const notes = await Note.find()
+    const notes = await Note.find(filter)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }); // newest first
-
+    
     // 3️⃣ Get total count for pagination metadata
-    const totalNotes = await Note.countDocuments();
+    const totalNotes = await Note.countDocuments(filter);
 
     // 4️⃣ Calculate total pages
     const totalPages = Math.ceil(totalNotes / limit);
