@@ -2,62 +2,61 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useSearchParams, useParams } from "next/navigation";
+import { useSearchParams, useParams, useRouter } from "next/navigation";
 import { Download } from "lucide-react";
-import {
-  FaClock,
-  FaEye,
-  FaDownload,
-  FaHeart,
-  FaFileAlt,
-} from "react-icons/fa";
+import { FaClock, FaDownload, FaHeart, FaFileAlt } from "react-icons/fa";
 
 import Pagination from "./HomeNotesPagination";
 import HomeCardSkeleton from "@/app/skeleton/Homecard-skeleton";
 import Notesbreadcumb from "./Notesbreadcumb";
 import { useDispatch } from "react-redux";
 import { setPreviewNoteId } from "../../redux/slices/previewNotes";
-import { useRouter } from "next/navigation";
-function NotesCategoryCard() {
+import useDebounce from "@/app/hooks/useDebounce"; // 👈 import
+function NotesCategoryCard({ searchTerm }) {
   const searchParams = useSearchParams();
-   const params = useParams();
-   const category = decodeURIComponent(params.Category);
+  const params = useParams();
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const category = decodeURIComponent(params.Category || "");
   const page = Number(searchParams.get("page")) || 1;
 
   const [notes, setNotes] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-
-   const dispatch = useDispatch();
-  const router = useRouter();
-
- const handlePreview = (note) => {
-  dispatch(setPreviewNoteId(note._id)); // ✅ ID only (SAFE)
-  router.push(`/notes-collection/${category}/${note._id}`); // ✅ URL source of truth
-};
+  const [loading, setLoading] = useState(false);
+    // ✅ DEBOUNCED SEARCH
+  const debouncedSearch = useDebounce(searchTerm, 800);
+  const handlePreview = (note) => {
+    dispatch(setPreviewNoteId(note._id));
+    router.push(`/notes-collection/${category}/${note._id}`);
+  };
 
   /* ----------------------------------
-     FETCH NOTES BY CATEGORY
+     FETCH NOTES (CATEGORY + SEARCH)
   ---------------------------------- */
   useEffect(() => {
     if (!category) return;
 
+    let isMounted = true;
+
     const fetchNotes = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/notes/getnotes-byCategory/${encodeURIComponent(
-            category
-          )}`,
-          {
-            params: {
-              page,
-              limit: 12,
-            },
-          }
-        );
+       const res = await axios.get(
+  `${process.env.NEXT_PUBLIC_API_URL}/notes/getnotes-byCategory/${encodeURIComponent(category)}`,
+  {
+    params: {
+      page,
+      limit: 12,
+       search: debouncedSearch?.trim() || "",
+    },
+  }
+);
 
-        if (res.data.success) {
+
+        if (!isMounted) return;
+
+        if (res.data?.success) {
           setNotes(res.data.data || []);
           setTotalPages(res.data.totalPages || 1);
         } else {
@@ -65,23 +64,35 @@ function NotesCategoryCard() {
           setTotalPages(1);
         }
       } catch (error) {
-        console.error("Failed to fetch notes", error);
-        setNotes([]);
-        setTotalPages(1);
+        console.error("Failed to fetch notes:", error);
+        if (isMounted) {
+          setNotes([]);
+          setTotalPages(1);
+        }
       } finally {
-        setLoading(false);
+        isMounted && setLoading(false);
       }
     };
 
     fetchNotes();
-  }, [category, page]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [category, page, debouncedSearch]);
+
+  /* ----------------------------------
+     RESET PAGE WHEN SEARCH CHANGES
+  ---------------------------------- */
+  useEffect(() => {
+    router.replace("?page=1");
+  }, [debouncedSearch, router]);
 
   return (
     <>
-      {/* Grid */}
-           <Notesbreadcumb category={category} />
+      <Notesbreadcumb category={category} />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-    
         {loading ? (
           <HomeCardSkeleton count={8} />
         ) : notes.length > 0 ? (
@@ -122,7 +133,6 @@ function NotesCategoryCard() {
 
               {/* Stats */}
               <div className="flex items-center gap-4 text-gray-400 text-xs mb-5">
-                
                 <div className="flex items-center gap-1">
                   <FaDownload /> {note.downloads}
                 </div>
@@ -133,13 +143,12 @@ function NotesCategoryCard() {
 
               {/* Actions */}
               <div className="flex items-center gap-3">
-               
-               <button
-    onClick={() => handlePreview(note)}
-    className="text-teal-500 text-sm font-medium hover:underline"
-  >
-    Preview
-  </button>
+                <button
+                  onClick={() => handlePreview(note)}
+                  className="text-teal-500 text-sm font-medium hover:underline"
+                >
+                  Preview
+                </button>
 
                 <a
                   href={note.fileUrl}
@@ -158,12 +167,11 @@ function NotesCategoryCard() {
           ))
         ) : (
           <p className="text-gray-400 col-span-full text-center">
-            No notes found for this category.
+            No notes found.
           </p>
         )}
       </div>
 
-      {/* Pagination */}
       {!loading && totalPages > 1 && (
         <div className="mt-12">
           <Pagination currentPage={page} totalPages={totalPages} />

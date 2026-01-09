@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
@@ -31,7 +31,6 @@ import PaperSkeleton from "@/app/skeleton/PaperCategory-skeleton";
    CATEGORY → ICON MAP
 ---------------------------------- */
 const categoryIcons = {
-  // 🔬 SCIENCE & ENGINEERING
   aerospace: FaPlane,
   biotechnology: FaMicroscope,
   chemical: FaFlask,
@@ -44,7 +43,6 @@ const categoryIcons = {
   chemistry: FaFlask,
   biology: FaBrain,
 
-  // 💼 COMMERCE
   commerce: FaChartLine,
   economics: FaCoins,
   accounting: FaCalculator,
@@ -52,7 +50,6 @@ const categoryIcons = {
   management: FaBriefcase,
   business: FaBriefcase,
 
-  // 🎨 ARTS & HUMANITIES
   arts: FaUniversity,
   law: FaBalanceScale,
   history: FaUniversity,
@@ -72,7 +69,7 @@ const getCategoryIcon = (category) => {
   return categoryIcons[category.toLowerCase()] || FaBookOpen;
 };
 
-const NotesCategory = () => {
+const NotesCategory = ({ searchTerm }) => {
   const router = useRouter();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,39 +77,50 @@ const NotesCategory = () => {
   /* ----------------------------------
      FETCH CATEGORIES
   ---------------------------------- */
- useEffect(() => {
-  const fetchCategories = async () => {
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/notes/get-category`
-      );
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/notes/get-category`
+        );
 
-      if (res.data.success && Array.isArray(res.data.data)) {
-        setCategories(res.data.data); // ✅ CORRECT
-      } else {
+        if (res.data?.success && Array.isArray(res.data?.data)) {
+          setCategories(res.data.data); // array of strings
+        } else {
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories", error);
         setCategories([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch categories", error);
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchCategories();
-}, []);
-
+    fetchCategories();
+  }, []);
 
   /* ----------------------------------
      NAVIGATION HANDLER
   ---------------------------------- */
- const handleClick = (category) => {
-  console.log("CLICKED CATEGORY →", category);
-  router.push(`/notes-collection/${encodeURIComponent(category)}`);
-};
+  const handleClick = (category) => {
+    router.push(`/notes-collection/${encodeURIComponent(category)}`);
+  };
 
+  /* ----------------------------------
+     FRONTEND SEARCH FILTER
+  ---------------------------------- */
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm) return categories;
 
+    return categories.filter((category) =>
+      category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm, categories]);
+
+  /* ----------------------------------
+     LOADING STATE
+  ---------------------------------- */
   if (loading) {
     return (
       <section className="py-10">
@@ -121,16 +129,23 @@ const NotesCategory = () => {
     );
   }
 
+  /* ----------------------------------
+     EMPTY STATE
+  ---------------------------------- */
+  if (!filteredCategories || filteredCategories.length === 0) {
+    return (
+      <p className="text-white/60 text-sm mt-4 text-center">
+        No results found
+      </p>
+    );
+  }
+
   return (
     <section className="py-2">
-      <div className="px-4">
-        <h2 className="text-2xl font-bold mb-8 text-white text-center md:text-start ">
-          Select Your Stream
-        </h2>
-      </div>
+      
 
       <div className="max-w-6xl mx-auto grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 px-4">
-        {categories.map((category, index) => {
+        {filteredCategories.map((category, index) => {
           const Icon = getCategoryIcon(category);
 
           return (

@@ -6,8 +6,7 @@ import {
     FaBookOpen,
     FaFileAlt,
     FaLayerGroup,
-    FaDownload,
-    FaSearch,
+    FaDownload
 } from "react-icons/fa";
 
 import CourseCard from "../../../self-component/Papers/Course";
@@ -15,7 +14,6 @@ import Breadcrumbuniversity from "@/app/self-component/Papers/Breadcum-universit
 
 export default function UniversityCoursesPage() {
     const { university } = useParams();
-    const [search, setSearch] = useState("");
 
     const universityName = university
         ? decodeURIComponent(university).replace(/-/g, " ")
@@ -41,19 +39,7 @@ export default function UniversityCoursesPage() {
                         </p>
 
 
-                        {/* ================= SEARCH ================= */}
-                        <div className="mt-6 max-w-xl">
-                            <div className="flex items-center gap-3 rounded-2xl bg-black/30 border border-white/10 px-4 py-3 focus-within:border-teal-400">
-                                <FaSearch className="text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search courses (B.Tech, B.Sc, MBA...)"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="w-full bg-transparent outline-none text-sm placeholder:text-slate-400"
-                                />
-                            </div>
-                        </div>
+                      
                     </div>
                 </div>
                 {/* breadcumb */}
@@ -72,7 +58,7 @@ export default function UniversityCoursesPage() {
                         🎓 Select Your Course
                     </h2>
                     {/* Course cards */}
-                    <CourseCard search={search} />
+                    <CourseCard  />
                 </div>
 
             </div>

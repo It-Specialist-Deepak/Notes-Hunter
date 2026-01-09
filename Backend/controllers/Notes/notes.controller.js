@@ -156,22 +156,34 @@ module.exports.GetNotesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
 
-    // pagination params
+    // pagination
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
 
+    const search = req.query.search || "";
+
     let query = {};
 
-    if (category) query.category = category;
-   
+    // category filter
+    if (category) {
+      query.category = category;
+    }
 
-    // fetch notes with pagination
+    // search filter (title / description / subject)
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { subject: { $regex: search, $options: "i" } },
+      ];
+    }
+
     const notes = await Note.find(query)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 }); // optional sorting
-    // total count for pagination
+      .sort({ createdAt: -1 });
+
     const totalNotes = await Note.countDocuments(query);
 
     res.status(200).json({
@@ -184,12 +196,14 @@ module.exports.GetNotesByCategory = async (req, res) => {
       data: notes,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: "Error fetching notes",
     });
   }
 };
+
 
 module.exports.LikeNotes = async (req, res) => {
   try {
@@ -268,43 +282,62 @@ module.exports.DownloadNotes = async (req, res) => {
 
 module.exports.SaveNote = async (req, res) => {
   try {
-    const { noteId } = req.params;
-    const user = await User.findById(req.user._id);
+    const { noteId, userId } = req.body;
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
 
-    // Check if note exists
+    // ✅ Fetch user document
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Check if note exists
     const noteExists = await Note.findById(noteId);
-    if (!noteExists)
-      return res.status(404).json({ message: "Notes not found" });
+    if (!noteExists) {
+      return res.status(404).json({ message: "Note not found" });
+    }
 
-    // Check if note is already saved
-    const alreadySaved = user.savedNotes.includes(noteId);
+    // ✅ Ensure savedNotes exists
+    if (!Array.isArray(user.savedNotes)) {
+      user.savedNotes = [];
+    }
+
+    // ✅ Check already saved
+    const alreadySaved = user.savedNotes.some(
+      (id) => id.toString() === noteId.toString()
+    );
 
     if (alreadySaved) {
-      // Remove note from saved list
+      // ❌ Remove note
       user.savedNotes = user.savedNotes.filter(
         (id) => id.toString() !== noteId.toString()
       );
+
       await user.save();
+
       return res.json({
-        message: "Notes removed from saved list",
+        message: "Note removed from saved list",
         saved: false,
       });
     } else {
-      // Add note to saved list
+      // ✅ Add note
       user.savedNotes.push(noteId);
       await user.save();
+
       return res.json({
-        message: "Notes saved successfully",
+        message: "Note saved successfully",
         saved: true,
       });
     }
   } catch (error) {
     console.error("Toggle Save Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 module.exports.getSavedNotes = async (req, res) => {
   try {

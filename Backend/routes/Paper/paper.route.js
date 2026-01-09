@@ -5,6 +5,7 @@ const uploadMiddleware = require("../../middleware/upload.middleware.js");
 const adminAuthMiddleware = require("../../middleware/adminAuth.middleware.js");
 const {
   UploadPaper,
+  PreviewPapers,
   AllUniversities,
   AlluniversityCourse,
   CategoriesByCourse,
@@ -15,9 +16,11 @@ const {
   DownloadPaper,
   SavePaper,
   getSavedpapers,
+  getRecommendedPapers
 } = require("../../controllers/Paper/paper.controller");
 // university view routes
 router.post("/upload-paper", verifyToken, uploadMiddleware, adminAuthMiddleware ,UploadPaper);
+router.get("/preview-paper/:paperId", PreviewPapers)
 router.get("/all-universities", AllUniversities);
 router.get("/all-university-course/:university", AlluniversityCourse);
 router.get("/all-course-category/:university/:course", CategoriesByCourse);
@@ -30,5 +33,5 @@ router.patch("/like-paper", verifyToken, LikePapers);
 router.get("/download-paper/:paperId", DownloadPaper);
 router.post("/save-papers/:paperId", verifyToken, SavePaper);
 router.get("/saved-papers", verifyToken, getSavedpapers);
-
+router.get("/recommended-papers/:paperId" ,  getRecommendedPapers);
 module.exports = router;

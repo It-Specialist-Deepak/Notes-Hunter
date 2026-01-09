@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Search, FileText, Download, Eye } from "lucide-react";
 import NotesCategoryCard from "@/app/self-component/Notes/NotesCategoryCard";
 
@@ -15,6 +15,7 @@ const stats = [
 const notes = Array.from({ length: 8 });
 
 export default function CategoryNotes() {
+       const [searchTerm, setSearchTerm] = useState("");
     return (
         <div className="min-h-screen bg-gradient-to-br 
 from-[#081a2d] 
@@ -38,17 +39,12 @@ to-[#061622]
                         </p>
 
                         {/* SEARCH */}
-                        <div className="flex items-center gap-3 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full p-2 max-w-xl">
-                            <Search className="ml-4 text-white/60" size={20} />
-                            <input
-                                type="text"
-                                placeholder="Search your Stream"
-                                className="flex-1 bg-transparent outline-none px-2 text-sm"
-                            />
-                            <button className="bg-gradient-to-r from-teal-500 to-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:opacity-90 transition">
-                                Search
-                            </button>
-                        </div>
+                         {/* SEARCH */} <div className="flex items-center gap-3 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full p-4 max-w-xl"> 
+                                                <Search className="ml-4 text-white/60" size={20} />
+                                                 <input type="text"   value={searchTerm}
+                                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                                 placeholder="Search notes, PDFs" className="flex-1 bg-transparent outline-none px-2 text-sm text-white" />
+                                                 </div>
                     </div>
 
                     {/* RIGHT STATS */}
@@ -70,7 +66,7 @@ to-[#061622]
             </section>
             <section className="pb-16 px-4">
                 <div className="max-w-7xl mx-auto">
-                    <NotesCategoryCard />
+                    <NotesCategoryCard searchTerm={searchTerm} />
                 </div>
             </section>
 

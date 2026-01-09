@@ -1,4 +1,5 @@
 const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const mongoose = require("mongoose");
 const s3 = require("../../config/S3.js");
 const PreviousYearPaper = require("../../models/paperModel/previousPaper.model.js");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
@@ -56,6 +57,41 @@ module.exports.UploadPaper = async (req, res) => {
     res.status(500).json({ message: "Upload failed", error: error.message });
   }
 };
+
+module.exports.PreviewPapers = async (req, res) => {
+  try {
+    const { paperId } = req.params;
+
+    // ✅ Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(paperId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Paper ID",
+      });
+    }
+
+    const paper = await PreviousYearPaper.findById(paperId);
+
+    if (!paper) {
+      return res.status(404).json({
+        success: false,
+        message: "Paper not found",
+      });
+    }
+   
+    res.status(200).json({
+      success: true,
+      data: paper,
+    });
+  } catch (error) {
+    console.error("Get Paper Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
 
 module.exports.AllUniversities = async (req, res) => {
   try {
@@ -237,60 +273,59 @@ module.exports.GetAllCategories = async (req, res) => {
 };
 // Assuming you are using Express.js
 // Route example: GET /api/papers/:category?page=1&limit=12
-
 module.exports.GetPapersByCategory = async (req, res) => {
   try {
-    const { category } = req.params; // now from route params
-    const page = parseInt(req.query.page) || 1;  // default page 1
-    const limit = parseInt(req.query.limit) || 12; // default 12 per page
-    const skip = (page - 1) * limit;
+    const { category } = req.params;
 
-    // Validate category
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+    const search = req.query.search || "";
+
     if (!category) {
       return res.status(400).json({
         success: false,
-        message: "Category parameter is required",
+        message: "Category is required",
       });
     }
 
-    // Convert category to lowercase for consistency
-    const cat = category.trim().toLowerCase();
+    const filter = {
+      category: category.trim().toLowerCase(),
+      ...(search && {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { subject: { $regex: search, $options: "i" } },
+          { university: { $regex: search, $options: "i" } },
+        ],
+      }),
+    };
 
-    // Fetch papers for given category with pagination
-    const papers = await PreviousYearPaper.find({ category: cat })
+    const papers = await PreviousYearPaper.find(filter)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 }); // newest first
+      .sort({ createdAt: -1 });
 
-    // Total count for pagination
-    const totalPapers = await PreviousYearPaper.countDocuments({ category: cat });
+    const totalPapers = await PreviousYearPaper.countDocuments(filter);
 
-    // Handle empty results
-    if (!papers.length) {
-      return res.status(404).json({
-        success: false,
-        message: `No papers found for category '${category}'`,
-      });
-    }
-
-    // Success response
     res.status(200).json({
       success: true,
-      category: category,
-      currentPage: page,
+      page,
+      limit,
       totalPages: Math.ceil(totalPapers / limit),
       totalPapers,
       count: papers.length,
-      papers,
+      data: papers, // ✅ SAME AS NOTES
     });
   } catch (error) {
-    console.error("Error fetching papers by category:", error);
+    console.error("GetPapersByCategory error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while fetching papers",
+      message: "Server error",
     });
   }
 };
+
+
 
 module.exports.LikePapers = async (req, res) => {
   try {
@@ -423,5 +458,36 @@ module.exports.getSavedpapers = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports.getRecommendedPapers = async (req, res) => {
+  try {
+    const { paperId } = req.params;
+
+    // 1️⃣ Find the current note
+    const paper = await PreviousYearPaper.findById(paperId);
+    if (!paper) {
+      return res.status(404).json({ message: "Paper not found" });
+    }
+
+    // 2️⃣ Find notes with the same subcategory (exclude current note)
+    const recommendedPapers = await PreviousYearPaper.find({
+      subcategory: paper.subcategory,
+      _id: { $ne: paper._id },
+    })
+      .limit(5) // show top 5 recommendations
+      .sort({ createdAt: -1 }); // newest first
+
+    // 3️⃣ Return recommended notes
+    res.status(200).json({
+      success: true,
+      subcategory: paper.subcategory,
+      total: recommendedPapers.length,
+      recommendedPapers,
+    });
+  } catch (error) {
+    console.error("Error fetching recommended papers:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };

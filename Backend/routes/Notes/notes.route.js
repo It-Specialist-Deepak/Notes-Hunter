@@ -15,7 +15,7 @@ router.get("/getnotes-byCategory/:category" , GetNotesByCategory);
 router.get("/get-allnotes", getAllNotes);
 router.patch("/likeNotes", verifyToken , LikeNotes);
 router.get("/download-notes/:noteId", DownloadNotes);
-router.post("/save-notes/:noteId", verifyToken , SaveNote);
+router.post("/save-notes", verifyToken , SaveNote);
 router.get("/saved-notes", verifyToken, getSavedNotes);
 router.post("/recommended-notes/:noteId" ,  getRecommendedNotes);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import NotesCard from "../../self-component/Notes/NotesCard"
 import { Search, FileText, Download, Eye } from "lucide-react";
 import NotesCategory from "@/app/self-component/Notes/NotesCategory";
@@ -15,6 +15,8 @@ const stats = [
 const notes = Array.from({ length: 8 });
 
 export default function NotesCollection() {
+    const [searchTerm, setSearchTerm] = useState("");
+
     return (
         <div className="min-h-screen bg-gradient-to-br 
 from-[#081a2d] 
@@ -23,36 +25,37 @@ to-[#061622]
  text-white overflow-hidden">
 
             {/* ================= HERO ================= */}
-            <section className="relative pt-36 pb-8 px-4">
-                <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+            <section className="relative pt-30 pb-8 px-4">
+                <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 items-center">
 
                     {/* LEFT */}
                     <div>
                         <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-                            📁 Browse Exam Papers
+                            📁 Notes Collection
                         </h1>
 
-                        <p className="text-white/70 max-w-xl mb-8">
+                        <p className="text-white/70 max-w-xl mb-6">
                             Discover and download study materials shared by our community of
                             students and educators.
                         </p>
 
                         {/* SEARCH */}
-                        <div className="flex items-center gap-3 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full p-2 max-w-xl">
-                            <Search className="ml-4 text-white/60" size={20} />
-                            <input
-                                type="text"
-                                placeholder="Search your Stream"
-                                className="flex-1 bg-transparent outline-none px-2 text-sm"
-                            />
-                            <button className="bg-gradient-to-r from-teal-500 to-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:opacity-90 transition">
-                                Search
-                            </button>
+                        <div className="flex items-center gap-3 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full p-4 max-w-xl">
+                        <Search className="ml-4 text-white/60" size={20} />
+                           <input
+  type="text"
+  placeholder="Search your Stream"
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  className="flex-1 bg-transparent outline-none px-2 text-sm text-white placeholder-white/50"
+/>
+
+                           
                         </div>
                     </div>
 
                     {/* RIGHT STATS */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {stats.map((item, i) => (
                             <div
                                 key={i}
@@ -70,7 +73,10 @@ to-[#061622]
             </section>
             <section className="pb-16 px-4">
                 <div className="max-w-7xl mx-auto">
-                    <NotesCategory />
+          <div className="mb-8">
+                    <h2 className="text-2xl font-bold  text-center md:text-start lg:ml-18">Select Your Stream</h2>
+                    </div>
+                    <NotesCategory  searchTerm={searchTerm}/>
                 </div>
             </section>
 

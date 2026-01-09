@@ -25,16 +25,16 @@ export const toggleLikeNote = createAsyncThunk(
   "notes/toggleLikeNote",
   async (noteId, { rejectWithValue }) => {
     try {
-      
+
       const userId = localStorage.getItem("userId"); // ✅ get userId
 
-     
-         if (!userId) {
-      return rejectWithValue({
-        message: "You need to Login First",
-        status: 401,
-      });
-    }
+
+      if (!userId) {
+        return rejectWithValue({
+          message: "You need to Login First",
+          status: 401,
+        });
+      }
       const res = await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/notes/likeNotes`,
         { noteId, userId }, // ✅ SEND BOTH
@@ -68,6 +68,41 @@ export const downloadNote = createAsyncThunk(
     }
   }
 );
+/* ---------------- TOGGLE SAVE NOTE ---------------- */
+export const toggleSaveNote = createAsyncThunk(
+  "notes/toggleSaveNote",
+  async ({ noteId }, { rejectWithValue }) => {
+    try {
+      // ✅ SSR safety
+      if (typeof window === "undefined") {
+        return rejectWithValue("Client only action");
+      }
+
+      const userId = localStorage.getItem("userId");
+      console.log(userId)
+      if (!userId) {
+        return rejectWithValue("You need to login first");
+      }
+
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/notes/save-notes`,
+        { noteId, userId },
+        { withCredentials: true }
+      );
+
+      return {
+        noteId,
+        saved: res.data.saved,
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to save note"
+      );
+    }
+  }
+);
+
+
 /* ===================== SLICE ===================== */
 const noteSlice = createSlice({
   name: "notes",
@@ -75,7 +110,9 @@ const noteSlice = createSlice({
     previewNote: null,
     previewNoteId: null,
     totalComments: 0,
+    savedNoteIds: [],
     loading: false,
+    saveLoading: false,
     likeLoading: false,
     error: null,
   },
@@ -122,7 +159,7 @@ const noteSlice = createSlice({
       })
       .addCase(toggleLikeNote.rejected, (state, action) => {
         state.likeLoading = false;
-         state.error = action.payload || { message: action.error.message };
+        state.error = action.payload || { message: action.error.message };
         console.log(action.payload)
       })
       // download
@@ -136,7 +173,33 @@ const noteSlice = createSlice({
       .addCase(downloadNote.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      /* ---------- SAVE / UNSAVE NOTE ---------- */
+      .addCase(toggleSaveNote.pending, (state) => {
+        state.saveLoading = true;
+        state.error = null;
+      })
+      .addCase(toggleSaveNote.fulfilled, (state, action) => {
+        const { noteId, saved } = action.payload;
+
+        if (saved) {
+          if (!state.savedNoteIds.includes(noteId)) {
+            state.savedNoteIds.push(noteId);
+          }
+        } else {
+          state.savedNoteIds = state.savedNoteIds.filter(
+            (id) => id !== noteId
+          );
+        }
+
+        state.saveLoading = false;
+      })
+      .addCase(toggleSaveNote.rejected, (state, action) => {
+        state.saveLoading = false;
+        state.error = action.payload;
       });
+
   },
 });
 

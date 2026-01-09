@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState , useMemo } from "react";
 import axios from "axios";
 import { GraduationCap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PaperSkeleton from "@/app/skeleton/PaperCategory-skeleton";
 
-const University = ({ search = "" }) => {
+const University = ({ searchTerm }) => {
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -42,10 +42,14 @@ const University = ({ search = "" }) => {
   router.push(`/papers-collection/${encodeURIComponent(university)}`);
 };
 
+const filteredCategories = useMemo(() => {
+  if (!searchTerm) return universities;
 
-  const filtered = universities.filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase())
+  return universities.filter((university) =>
+    university.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+}, [searchTerm, universities]);
+
 
   if (loading) {
     return <PaperSkeleton />;
@@ -54,7 +58,7 @@ const University = ({ search = "" }) => {
   return (
     <>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((uni) => (
+        {filteredCategories.map((uni) => (
           <div
             key={uni.id}
             onClick={() => handleClick(uni.name)}
@@ -75,7 +79,7 @@ const University = ({ search = "" }) => {
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {universities.length === 0 && (
         <p className="mt-16 text-center text-slate-400">
           No universities found.
         </p>

@@ -19,7 +19,6 @@ const CollectionPaper = () => {
     const [papers, setPapers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [search, setSearch] = useState("");
     // ================= FORMAT FOR UI =================
     const formatName = (value = "") => {
         const decoded = decodeURIComponent(value);
@@ -68,7 +67,7 @@ const CollectionPaper = () => {
 
     return (
         <section className="min-h-screen bg-[#0b1120] text-white">
-            <div className="max-w-7xl mx-auto px-6 py-24 space-y-10">
+            <div className="max-w-7xl mx-auto px-5 pt-23 space-y-6">
 
                 {/* ================= HEADER ================= */}
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-500/10 via-white/5 to-transparent border border-white/10 p-10">
@@ -91,19 +90,7 @@ const CollectionPaper = () => {
                             <span className="text-teal-400"> {formatName(universityName)}</span>
                         </p>
                     </div>
-                    {/* ================= SEARCH ================= */}
-                    <div className="mt-6 max-w-xl">
-                        <div className="flex items-center gap-3 rounded-2xl bg-black/30 border border-white/10 px-4 py-3 focus-within:border-teal-400">
-                            <FaSearch className="text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search courses (B.Tech, B.Sc, MBA...)"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full bg-transparent outline-none text-sm placeholder:text-slate-400"
-                            />
-                        </div>
-                    </div>
+        
                 </div>
                 <Breadcrumbcategory universityName={formatName(universityName)} courseName={formatName(courseName)} categoryName={categoryName} />
                 {/* ================= CONTENT ================= */}
@@ -112,7 +99,7 @@ const CollectionPaper = () => {
                         {[...Array(6)].map((_, i) => (
                             <div
                                 key={i}
-                                className="h-32 rounded-2xl bg-white/5 animate-pulse border border-white/10"
+                                className="h-62 rounded-2xl bg-white/5 animate-pulse border border-white/10"
                             />
                         ))}
                     </div>
