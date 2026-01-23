@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import RecommendedPaperCard from "./RecomendedPaperCard";
 
-export default function RecommendedPaperSlider({ papers, category }) {
+export default function RecommendedPaperSlider({ papers, category , university , course }) {
   const scrollRef = useRef(null);
 
   const scroll = (direction) => {
@@ -42,6 +42,8 @@ export default function RecommendedPaperSlider({ papers, category }) {
             <RecommendedPaperCard
               paper={p}
               category={category}
+              university={university}
+              course={course}
             />
           </div>
         ))}

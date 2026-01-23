@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPreviewPaper } from "../../../../redux/slices/previewpaperSlice";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   FaFileAlt,
   FaDownload,
   FaEye,
   FaHeart,
+
   FaUniversity,
   FaBookOpen,
   FaCalendarAlt,
@@ -16,16 +17,22 @@ import {
 } from "react-icons/fa";
 import BreadcrumbPaperPreview from "@/app/self-component/Papers/Breadcumb-preview-paper";
 import RecommendedPapers from "../../../../self-component/Papers/RecommendedPapers";
+import { toggleLikePaper, downloadPaper } from "../../../../redux/slices/previewpaperSlice";
+import toast from "react-hot-toast";
+
 
 
 export default function PreviewPaperPage() {
   const dispatch = useDispatch();
+  const router = useRouter();
+  const [isLiked, setIsLiked] = useState(false);
   const { paperId } = useParams();
 
   const {
     paper,
     loading,
     error,
+    likeStatus
   } = useSelector((state) => state.previewPapers);
 
   // 🔁 Fetch if user directly opens URL
@@ -35,49 +42,95 @@ export default function PreviewPaperPage() {
     }
   }, [paperId, dispatch]);
 
+  // In your component
+  const handleLike = async () => {
+    try {
+      const resultAction = await dispatch(toggleLikePaper({ paperId }));
+
+      if (toggleLikePaper.fulfilled.match(resultAction)) {
+      } else if (toggleLikePaper.rejected.match(resultAction)) {
+        const error = resultAction.payload;
+        const isLoggedIn = localStorage.getItem('userId') === 'true';
+        if (!isLoggedIn) {
+          router.push(`/login?redirect=${encodeURIComponent(router.asPath)}`);
+          return;
+        }
+        else {
+          toast.error(error.message || "Failed to update like");
+        }
+      }
+    } catch (error) {
+      console.error("Error in handleLike:", error);
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+
+
+  // Update the download handler in your page.jsx
+  const handleDownload = async () => {
+    console.log("Downloading paper with ID:", paperId); // Check the ID in console
+
+    try {
+      const result = await dispatch(downloadPaper(paperId)); // Directly pass paperId as string
+      console.log("Download result:", result); // Debug log
+
+      if (downloadPaper.fulfilled.match(result)) {
+        const downloadUrl = result.payload?.downloadUrl;
+        if (downloadUrl) {
+          console.log("Opening download URL:", downloadUrl);
+          window.open(downloadUrl, '_blank');
+        } else {
+          console.error("No download URL in response");
+        }
+      }
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
   if (loading) {
     return (
-     <div className="min-h-screen bg-gradient-to-br from-[#081a2d] via-[#0b3a4a] to-[#061622]  ">
+      <div className="min-h-screen bg-gradient-to-br from-[#081a2d] via-[#0b3a4a] to-[#061622]  ">
 
-  <section className="relative min-h-screen flex items-center justify-center px-4">
+        <section className="relative min-h-screen flex items-center justify-center px-4">
 
-    {/* LOADER OVERLAY */}
-    <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-  <div className="flex flex-col items-center gap-5">
+          {/* LOADER OVERLAY */}
+          <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+            <div className="flex flex-col items-center gap-5">
 
-    {/* Pulse Ring Loader */}
-    <div className="relative w-20 h-20">
-      <span className="absolute inset-0 rounded-full border-2 border-teal-400/40 animate-ping"></span>
-      <span className="absolute inset-2 rounded-full border-2 border-teal-400 animate-spin"></span>
-      <span className="absolute inset-6 rounded-full bg-teal-400/80"></span>
-    </div>
+              {/* Pulse Ring Loader */}
+              <div className="relative w-20 h-20">
+                <span className="absolute inset-0 rounded-full border-2 border-teal-400/40 animate-ping"></span>
+                <span className="absolute inset-2 rounded-full border-2 border-teal-400 animate-spin"></span>
+                <span className="absolute inset-6 rounded-full bg-teal-400/80"></span>
+              </div>
 
-    {/* Text */}
-    <p className="text-teal-300 text-xs tracking-[0.35em] uppercase animate-pulse">
-      Loading...
-    </p>
+              {/* Text */}
+              <p className="text-teal-300 text-xs tracking-[0.35em] uppercase animate-pulse">
+                Loading...
+              </p>
 
-  </div>
-</div>
+            </div>
+          </div>
 
 
-  </section>
-</div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-400">
-        {error}
+        </section>
       </div>
     );
   }
 
+  // if (error) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center text-red-400">
+  //      {typeof error === "string" ? error : error?.message}
+  //     </div>
+  //   );
+  // }
+
   if (!paper) return null;
 
   return (
- <div className="min-h-screen bg-gradient-to-br from-[#081a2d] via-[#0b3a4a] to-[#061622]  px-4 pb-14 pt-24  text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#081a2d] via-[#0b3a4a] to-[#061622]  px-4 pb-14 pt-24  text-white">
       <div className="max-w-5xl mx-auto">
         <BreadcrumbPaperPreview category={paper.category} title={paper.title} />
         {/* Post Card */}
@@ -138,25 +191,28 @@ export default function PreviewPaperPage() {
 
               {/* Like Button */}
               <button
-                className="flex items-center gap-2 px-5 py-2 rounded-xl
-                  border border-white/20 text-white/80
-                  hover:bg-white/10 transition"
+                onClick={handleLike}
+                disabled={likeStatus === 'pending'}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-gray-400 hover:text-white"
               >
-                <FaHeart className="text-emerald-400" />
-                Like
+                {likeStatus === 'pending' ? (
+                  <span className="animate-pulse">...</span>
+                ) : (
+                  <FaHeart /> // Always show the outline heart
+                )}
+                <span>{paper?.likes || 0}</span>
               </button>
 
               {/* Download */}
-              <a
-                href={paper.fileUrl}
-                target="_blank"
+              <button
+                onClick={handleDownload}
                 className="flex items-center gap-2 px-6 py-2 rounded-xl
                   bg-gradient-to-r from-emerald-500 to-teal-500
                   text-white font-semibold shadow-lg hover:opacity-90 transition"
               >
                 <FaDownload />
                 Download
-              </a>
+              </button>
             </div>
           </div>
         </div>

@@ -114,7 +114,7 @@ function NotesSection({ searchQuery }) {
     dispatch(setPreviewNoteId(note._id));
     router.push(`/browse-notes/${note._id}`);
   };
-
+ 
   /* ================= RENDER ================= */
 
   return (
@@ -126,7 +126,7 @@ function NotesSection({ searchQuery }) {
         ) : (
           notes.map((note) => {
             const isSaved = savedNoteIds.includes(note._id);
-            console.log(isSaved)
+            console.log("issaved " , isSaved , note._id)
             return (
               <div
                 key={note._id}
@@ -156,6 +156,7 @@ function NotesSection({ searchQuery }) {
     hover:scale-110
     disabled:opacity-50 disabled:cursor-not-allowed
     ${isSaved ? "bg-red-500/10" : "bg-white/5"}
+    
   `}
                   >
                     {isSaved ? (

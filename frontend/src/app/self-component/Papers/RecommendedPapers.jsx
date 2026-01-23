@@ -7,7 +7,7 @@ import {
 } from "../../redux/slices/recommendedPapers"; // ✅ FIX
 import RecommendedPaperSlider from "./RecommendedPaperSlider";
 
-export default function RecommendedPapers({ paperId, category }) {
+export default function RecommendedPapers({ paperId, category , university , course  }) {
   const dispatch = useDispatch();
 
   const {
@@ -71,6 +71,8 @@ export default function RecommendedPapers({ paperId, category }) {
         <RecommendedPaperSlider
           papers={recommended}
           category={category}
+          university={university}
+          course={course}
         />
       </div>
     </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import NotesCard from "../../self-component/Notes/NotesCard"
 import { Search, FileText, Download, Eye } from "lucide-react";
 import NotesCategory from "@/app/self-component/Notes/NotesCategory";
 // import PapersCategory from "@/app/self-component/Papers/PapersCategory";

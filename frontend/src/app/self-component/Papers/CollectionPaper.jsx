@@ -2,20 +2,21 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "next/navigation";
+import { useParams , useRouter } from "next/navigation";
 import {
     FaLayerGroup,
     FaUniversity,
     FaBookOpen,
-    FaCalendarAlt,
-    FaSearch
+    FaCalendarAlt
 
 } from "react-icons/fa";
+import { useDispatch } from "react-redux";
 import Breadcrumbcategory from "./Breadcumb-category-paper";
-
+import { fetchPreviewPaper , downloadPaper } from "../../redux/slices/previewpaperSlice";
 const CollectionPaper = () => {
     const { university, course, category } = useParams();
-    //  console.log(university, course, category);
+      const dispatch = useDispatch();
+      const router = useRouter();
     const [papers, setPapers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -36,7 +37,7 @@ const CollectionPaper = () => {
     const courseName = formatName(course);
     const categoryName = formatName(category);
 
-
+     
     // ================= FETCH PAPERS =================
     useEffect(() => {
         if (!university || !course || !category) return;
@@ -65,6 +66,38 @@ const CollectionPaper = () => {
         fetchPapers();
     }, [university, course, category]);
 
+const handlePreview = (paperId) => async () => {
+    try {
+        const result = await dispatch(fetchPreviewPaper(paperId));
+
+        if (fetchPreviewPaper.fulfilled.match(result)) {
+            router.push(
+                `/papers-collection/${university}/${course}/${category}/${paperId}`
+            );
+        }
+    } catch (error) {
+        console.error("Error previewing paper:", error);
+    }
+};
+const handleDownload = (paperId) => async (e) => {
+    e.preventDefault();
+    console.log("Downloading paper:", paperId);
+
+    try {
+        const result = await dispatch(downloadPaper(paperId));
+        
+        if (downloadPaper.fulfilled.match(result)) {
+            // The API should return a direct download URL
+            const downloadUrl = result.payload?.downloadUrl || result.payload;
+            if (downloadUrl) {
+                // Open the download URL in a new tab
+                window.open(downloadUrl, '_blank');
+            }
+        }
+    } catch (error) {
+        console.error("Download failed:", error);
+    }
+};
     return (
         <section className="min-h-screen bg-[#0b1120] text-white">
             <div className="max-w-7xl mx-auto px-5 pt-23 space-y-6">
@@ -90,7 +123,7 @@ const CollectionPaper = () => {
                             <span className="text-teal-400"> {formatName(universityName)}</span>
                         </p>
                     </div>
-        
+
                 </div>
                 <Breadcrumbcategory universityName={formatName(universityName)} courseName={formatName(courseName)} categoryName={categoryName} />
                 {/* ================= CONTENT ================= */}
@@ -178,38 +211,36 @@ const CollectionPaper = () => {
                                     </div>
 
                                     {/* ===== ACTIONS ===== */}
-                                    {paper.fileUrl && (
-                                        <div className="mt-4 grid grid-cols-2 gap-3">
 
-                                            {/* Preview Button */}
-                                            <a
-                                                href={paper.fileUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center justify-center gap-2 rounded-xl
+                                    <div className="mt-4 grid grid-cols-2 gap-3">
+
+                                        {/* Preview Button */}
+                                        <button
+                                             onClick={handlePreview(paper._id)}
+                                            className="flex items-center justify-center gap-2 rounded-xl
                  bg-white/5 text-slate-300 border border-white/10
                  py-2 text-sm font-medium
                  hover:bg-white/10 hover:border-teal-400/40
                  transition"
-                                            >
-                                                👁 Preview
-                                            </a>
+                                        >
+                                            👁 Preview
+                                        </button>
 
-                                            {/* Download Button */}
-                                            <a
-                                                href={paper.fileUrl}
-                                                download
-                                                className="flex items-center justify-center gap-2 rounded-xl
+                                        {/* Download Button */}
+                                        <button
+                                        onClick={handleDownload(paper._id)}
+                                            
+                                            className="flex items-center justify-center gap-2 rounded-xl
                  bg-teal-500/15 text-teal-400 border border-teal-400/30
                  py-2 text-sm font-medium
                  hover:bg-teal-500/25 hover:border-teal-400/60
                  transition"
-                                            >
-                                                ⬇ Download
-                                            </a>
+                                        >
+                                            ⬇ Download
+                                        </button>
 
-                                        </div>
-                                    )}
+                                    </div>
+
 
                                 </div>
                             </div>

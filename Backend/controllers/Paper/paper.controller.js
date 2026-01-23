@@ -329,12 +329,11 @@ module.exports.GetPapersByCategory = async (req, res) => {
 
 module.exports.LikePapers = async (req, res) => {
   try {
-    const userId = req.user.id; // ✅ from token (middleware)
-    const { paperId } = req.body; // ✅ from request body
+    const { userId , paperId } = req.body; // ✅ from request body
 
     // Validate paperId
-    if (!paperId) {
-      return res.status(400).json({ message: "Paper ID is required" });
+    if (!userId || !paperId) {
+      return res.status(400).json({ message: "User ID , Paper ID are required" });
     }
 
     // Find paper

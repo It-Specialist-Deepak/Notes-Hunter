@@ -11,7 +11,7 @@ import {
   FaLayerGroup,
 } from "react-icons/fa";
 import { useDispatch } from "react-redux";
-import { fetchPreviewPaper } from "../../redux/slices/previewpaperSlice";
+import { fetchPreviewPaper , downloadPaper } from "../../redux/slices/previewpaperSlice";
 import { useRouter } from "next/navigation";
 
 export default function PaperCard({ paper, category }) {
@@ -25,7 +25,27 @@ export default function PaperCard({ paper, category }) {
       router.push(`/browse-papers/${category}/${paper._id}`);
     }
   };
-
+    // Update the download handler in your page.jsx
+    const handleDownload = async () => {
+      console.log("Downloading paper with ID:", paper._id); // Check the ID in console
+  
+      try {
+        const result = await dispatch(downloadPaper(paper._id)); // Directly pass paperId as string
+        console.log("Download result:", result); // Debug log
+  
+        if (downloadPaper.fulfilled.match(result)) {
+          const downloadUrl = result.payload?.downloadUrl;
+          if (downloadUrl) {
+            console.log("Opening download URL:", downloadUrl);
+            window.open(downloadUrl, '_blank');
+          } else {
+            console.error("No download URL in response");
+          }
+        }
+      } catch (error) {
+        console.error("Download failed:", error);
+      }
+    };
   return (
     <div className="group relative overflow-hidden rounded-3xl
       bg-white/10 backdrop-blur-2xl border border-white/20
@@ -80,9 +100,8 @@ export default function PaperCard({ paper, category }) {
           Preview
         </button>
 
-        <a
-          href={paper.fileUrl}
-          target="_blank"
+        <button
+         onClick={handleDownload}
           className="flex items-center gap-2 px-5 py-2 rounded-xl
             bg-gradient-to-r from-emerald-500 to-teal-500
             text-white text-sm font-semibold shadow-lg
@@ -90,7 +109,7 @@ export default function PaperCard({ paper, category }) {
         >
           <FaDownload />
           Download
-        </a>
+        </button>
       </div>
     </div>
   );

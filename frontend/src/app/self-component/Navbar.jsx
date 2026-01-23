@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { X, Menu, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
 import { useIsMobile } from "../../app/other/use-navigation-mobile";
 import {
   NavigationMenu,
@@ -15,19 +16,22 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import LogoutButton from "./Auth/Logout";
+import { FaBookmark } from "react-icons/fa";
 
 const NavBar = ({ isLoggedIn }) => {
+  const role = localStorage.getItem("role");
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const isMobile = useIsMobile();
-
+  const { notes = [], papers = [] } = useSelector((state) => state.savedItems);
+const savedCount = notes.length + papers.length;
   /* ================= SCROLL EFFECT ================= */
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-   const mobileMenuItems = [
+  const mobileMenuItems = [
     {
       title: "Notes",
       subItems: [
@@ -46,7 +50,7 @@ const NavBar = ({ isLoggedIn }) => {
     { title: "About Us", href: "/docs" },
     { title: "Blogs", href: "/docs" },
   ];
-   const [openMenus, setOpenMenus] = useState({});
+  const [openMenus, setOpenMenus] = useState({});
 
   const toggleMenu = (title) => {
     setOpenMenus((prev) => ({
@@ -114,6 +118,40 @@ const NavBar = ({ isLoggedIn }) => {
           </NavigationMenuContent>
         </NavigationMenuItem>
 
+        {/* Admin Menu */}
+       {role === "admin" && (
+  <NavigationMenuItem>
+    <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
+
+    <NavigationMenuContent>
+      <ul className="grid w-[300px]">
+        <li>
+          <NavigationMenuLink asChild>
+            <Link href="/admindashboard">
+              <div className="font-medium">Admin Dashboard</div>
+              <div className="text-muted-foreground">
+                See Website Stats
+              </div>
+            </Link>
+          </NavigationMenuLink>
+        </li>
+
+        <li>
+          <NavigationMenuLink asChild>
+            <Link href="/upload">
+              <div className="font-medium">Upload Notes/Papers</div>
+              <div className="text-muted-foreground">
+                Upload Notes and Papers
+              </div>
+            </Link>
+          </NavigationMenuLink>
+        </li>
+      </ul>
+    </NavigationMenuContent>
+  </NavigationMenuItem>
+)}
+
+
         {["Courses", "About Us", "Blogs"].map((item) => (
           <NavigationMenuItem key={item}>
             <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
@@ -123,21 +161,21 @@ const NavBar = ({ isLoggedIn }) => {
         ))}
       </NavigationMenuList>
     </NavigationMenu>
+
   );
 
   return (
     <>
       {/* ================= HEADER ================= */}
-<header
-  className={`left-0 w-full z-50 transition-all duration-300 ease-out
+      <header
+        className={`left-0 w-full z-50 transition-all duration-300 ease-out
     backdrop-blur-3xl backdrop-saturate-150
-    ${
-      scrolled
-        ? "fixed top-0 bg-white/20 dark:bg-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] border-b border-white/40"
-        : "absolute top-0 bg-white/10 dark:bg-white/5 border-b border-white/30"
-    }
+    ${scrolled
+            ? "fixed top-0 bg-white/20 dark:bg-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] border-b border-white/40"
+            : "absolute top-0 bg-white/10 dark:bg-white/5 border-b border-white/30"
+          }
   `}
->
+      >
 
         <div className="mx-auto flex justify-around h-20 max-w-7xl items-center px-4">
           {/* LOGO */}
@@ -156,6 +194,37 @@ const NavBar = ({ isLoggedIn }) => {
           {/* DESKTOP NAV */}
           <div className="ml-auto hidden md:flex items-center gap-8">
             {desktopMenu}
+            {isLoggedIn ? (
+              <div className="relative">
+                <Link href="/saved-collection" className="
+    w-10 h-10
+    flex items-center justify-center
+    rounded-full
+    bg-white/10 backdrop-blur-md
+    border border-white/10
+    hover:bg-white/20
+    transition-all duration-300 cursor-pointer
+  ">
+                  <FaBookmark className="text-lg text-white" />
+                </Link>
+
+                {savedCount > 0 && (
+    <span className="
+      absolute -top-1 -right-1
+      min-w-[18px] h-[18px]
+      flex items-center justify-center
+      text-[10px] font-semibold
+      text-white
+      bg-gradient-to-r from-red-500 to-pink-500
+      rounded-full
+      shadow-md
+      animate-bounce
+    ">
+      {savedCount > 9 ? '9+' : savedCount}
+    </span>
+  )}
+              </div>
+            ) : null}
 
             {isLoggedIn ? (
               <LogoutButton />
@@ -178,20 +247,49 @@ const NavBar = ({ isLoggedIn }) => {
           </div>
 
           {/* MOBILE BUTTON */}
+          <div className="ml-auto md:hidden flex items-center gap-3">
+            {isLoggedIn ? (
+              <div className="relative">
+                <button className="
+    w-10 h-10
+    flex items-center justify-center
+    rounded-full
+    bg-white/10 backdrop-blur-md
+    border border-white/10
+    hover:bg-white/20
+    transition-all duration-300 cursor-pointer
+  ">
+                  <FaBookmark className="text-lg text-white" />
+                </button>
+
+                <span className="
+    absolute -top-1 -right-1
+    min-w-[18px] h-[18px]
+    flex items-center justify-center
+    text-[10px] font-semibold
+    text-white
+    bg-gradient-to-r from-red-500 to-pink-500
+    rounded-full
+    shadow-md
+  ">
+                  5
+                </span>
+              </div>
+            ) : null }
           <button
             onClick={() => setOpen(true)}
             className="ml-auto md:hidden p-2 rounded-lg bg-white/40"
           >
             <Menu size={24} />
           </button>
+          </div>
         </div>
       </header>
 
       {/* ================= MOBILE DRAWER ================= */}
       <div
-        className={`fixed inset-0 z-50 ${
-          open ? "visible opacity-100" : "invisible opacity-0"
-        }`}
+        className={`fixed inset-0 z-50 ${open ? "visible opacity-100" : "invisible opacity-0"
+          }`}
       >
         <div
           onClick={() => setOpen(false)}
