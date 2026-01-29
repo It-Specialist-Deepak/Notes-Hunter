@@ -17,14 +17,21 @@ import {
 } from "@/components/ui/navigation-menu";
 import LogoutButton from "./Auth/Logout";
 import { FaBookmark } from "react-icons/fa";
+import { 
+  BookOpen
+} from "lucide-react";
 
 const NavBar = ({ isLoggedIn }) => {
-  const role = localStorage.getItem("role");
+  const [role, setRole] = useState(null);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const isMobile = useIsMobile();
   const { notes = [], papers = [] } = useSelector((state) => state.savedItems);
-const savedCount = notes.length + papers.length;
+  const savedCount = notes.length + papers.length;
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role");
+    setRole(storedRole);
+  }, []);
   /* ================= SCROLL EFFECT ================= */
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
@@ -42,7 +49,7 @@ const savedCount = notes.length + papers.length;
     {
       title: "Previous Papers",
       subItems: [
-        { title: "Browse Papers / Categories", href: "/previous-papers" },
+        { title: "Browse Papers / Categories", href: "/browse-papers" },
         { title: "Collection", href: "papers-collection" },
       ],
     },
@@ -119,37 +126,37 @@ const savedCount = notes.length + papers.length;
         </NavigationMenuItem>
 
         {/* Admin Menu */}
-       {role === "admin" && (
-  <NavigationMenuItem>
-    <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
+        {role === "admin" && (
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
 
-    <NavigationMenuContent>
-      <ul className="grid w-[300px]">
-        <li>
-          <NavigationMenuLink asChild>
-            <Link href="/admindashboard">
-              <div className="font-medium">Admin Dashboard</div>
-              <div className="text-muted-foreground">
-                See Website Stats
-              </div>
-            </Link>
-          </NavigationMenuLink>
-        </li>
+            <NavigationMenuContent>
+              <ul className="grid w-[300px]">
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link href="/admindashboard">
+                      <div className="font-medium">Admin Dashboard</div>
+                      <div className="text-muted-foreground">
+                        See Website Stats
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
 
-        <li>
-          <NavigationMenuLink asChild>
-            <Link href="/upload">
-              <div className="font-medium">Upload Notes/Papers</div>
-              <div className="text-muted-foreground">
-                Upload Notes and Papers
-              </div>
-            </Link>
-          </NavigationMenuLink>
-        </li>
-      </ul>
-    </NavigationMenuContent>
-  </NavigationMenuItem>
-)}
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link href="/upload">
+                      <div className="font-medium">Upload Notes/Papers</div>
+                      <div className="text-muted-foreground">
+                        Upload Notes and Papers
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        )}
 
 
         {["Courses", "About Us", "Blogs"].map((item) => (
@@ -179,17 +186,17 @@ const savedCount = notes.length + papers.length;
 
         <div className="mx-auto flex justify-around h-20 max-w-7xl items-center px-4">
           {/* LOGO */}
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/Notes-hunter-logo.png"
-              alt="Notes Hunter"
-              width={44}
-              height={44}
-            />
-            <span className="text-2xl font-bold text-teal-600">
-              NotesHunter
-            </span>
-          </Link>
+         <Link href="/" className="flex items-center gap-3">
+  <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-md shadow-emerald-500/30">
+                <BookOpen className="w-6 h-6 text-white" />
+           
+  </div>
+
+  <span className="text-2xl font-bold text-teal-600 leading-none">
+    NotesHunter
+  </span>
+</Link>
+
 
           {/* DESKTOP NAV */}
           <div className="ml-auto hidden md:flex items-center gap-8">
@@ -209,7 +216,7 @@ const savedCount = notes.length + papers.length;
                 </Link>
 
                 {savedCount > 0 && (
-    <span className="
+                  <span className="
       absolute -top-1 -right-1
       min-w-[18px] h-[18px]
       flex items-center justify-center
@@ -220,9 +227,9 @@ const savedCount = notes.length + papers.length;
       shadow-md
       animate-bounce
     ">
-      {savedCount > 9 ? '9+' : savedCount}
-    </span>
-  )}
+                    {savedCount}
+                  </span>
+                )}
               </div>
             ) : null}
 
@@ -250,7 +257,7 @@ const savedCount = notes.length + papers.length;
           <div className="ml-auto md:hidden flex items-center gap-3">
             {isLoggedIn ? (
               <div className="relative">
-                <button className="
+                <Link href="/saved-collection" className="
     w-10 h-10
     flex items-center justify-center
     rounded-full
@@ -260,28 +267,31 @@ const savedCount = notes.length + papers.length;
     transition-all duration-300 cursor-pointer
   ">
                   <FaBookmark className="text-lg text-white" />
-                </button>
+                </Link>
 
-                <span className="
-    absolute -top-1 -right-1
-    min-w-[18px] h-[18px]
-    flex items-center justify-center
-    text-[10px] font-semibold
-    text-white
-    bg-gradient-to-r from-red-500 to-pink-500
-    rounded-full
-    shadow-md
-  ">
-                  5
-                </span>
+                {savedCount > 0 && (
+                  <span className="
+      absolute -top-1 -right-1
+      min-w-[18px] h-[18px]
+      flex items-center justify-center
+      text-[10px] font-semibold
+      text-white
+      bg-gradient-to-r from-red-500 to-pink-500
+      rounded-full
+      shadow-md
+      animate-bounce
+    ">
+                    {savedCount}
+                  </span>
+                )}
               </div>
-            ) : null }
-          <button
-            onClick={() => setOpen(true)}
-            className="ml-auto md:hidden p-2 rounded-lg bg-white/40"
-          >
-            <Menu size={24} />
-          </button>
+            ) : null}
+            <button
+              onClick={() => setOpen(true)}
+              className="ml-auto md:hidden p-2 rounded-lg bg-white/40"
+            >
+              <Menu size={24} />
+            </button>
           </div>
         </div>
       </header>
@@ -293,64 +303,82 @@ const savedCount = notes.length + papers.length;
       >
         <div
           onClick={() => setOpen(false)}
-          className="absolute inset-0 bg-black/40"
+          className="absolute inset-0 bg-black/80 backdrop-blur-md"
         />
 
         <div
-          className={`absolute right-0 top-0 h-full w-72 bg-white backdrop-blur-xl
-          transform transition-transform duration-300
+          className={`absolute right-0 top-0 h-full w-80 bg-gradient-to-br from-gray-900 via-gray-800/95 to-gray-900/90 backdrop-blur-2xl
+          transform transition-all duration-500 ease-out shadow-2xl border-l border-teal-500/20
           ${open ? "translate-x-0" : "translate-x-full"}`}
         >
-          <div className="flex justify-between items-center px-5 py-4 border-b">
-            <span className="font-bold text-teal-600">NotesHunter</span>
-            <button onClick={() => setOpen(false)}>
-              <X />
+          {/* Header */}
+          <div className="flex justify-between items-center px-6 py-5 border-b border-teal-500/20 bg-gradient-to-r from-teal-900/30 via-teal-800/20 to-teal-900/30 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/30">
+                <span className="text-white font-bold text-sm">NH</span>
+              </div>
+              <span className="font-bold text-xl bg-gradient-to-r from-teal-300 via-teal-400 to-teal-300 bg-clip-text text-transparent">NotesHunter</span>
+            </div>
+            <button 
+              onClick={() => setOpen(false)}
+              className="p-2 rounded-full hover:bg-teal-500/10 transition-all duration-200 group"
+            >
+              <X size={20} className="text-gray-400 group-hover:text-teal-400 transition-colors" />
             </button>
           </div>
 
-          <div className="p-5 space-y-6">
+          <div className="p-6 space-y-6">
             {/* Desktop menu fallback */}
             {!isMobile && desktopMenu}
 
             {/* Mobile Menu */}
             {isMobile && (
-              <ul className="flex flex-col gap-4">
+              <ul className="flex flex-col gap-2">
                 {mobileMenuItems.map((item, idx) => (
                   <li key={idx}>
                     {item.subItems ? (
-                      <>
+                      <div className="overflow-hidden rounded-xl">
                         <div
-                          className="flex justify-between items-center font-medium text-teal-700 cursor-pointer"
+                          className="flex justify-between items-center p-4 font-medium text-gray-200 cursor-pointer hover:bg-gradient-to-r hover:from-teal-500/10 hover:to-teal-600/10 transition-all duration-200 rounded-xl group"
                           onClick={() => toggleMenu(item.title)}
                         >
-                          {item.title}
+                          <span className="flex items-center gap-3">
+                            <div className="w-2 h-2 bg-gradient-to-r from-teal-400 to-teal-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                            {item.title}
+                          </span>
                           {openMenus[item.title] ? (
-                            <ChevronUp size={16} />
+                            <ChevronUp size={16} className="text-teal-400" />
                           ) : (
-                            <ChevronDown size={16} />
+                            <ChevronDown size={16} className="text-gray-500 group-hover:text-teal-400 transition-colors" />
                           )}
                         </div>
 
                         {openMenus[item.title] && (
-                          <ul className="ml-4 mt-2 space-y-2">
+                          <ul className="ml-4 mt-1 space-y-1 animate-in slide-in-from-top-2 duration-200">
                             {item.subItems.map((sub, i) => (
                               <li key={i}>
                                 <Link
                                   href={sub.href}
-                                  className="text-teal-600"
+                                  className="block py-3 px-4 text-gray-300 hover:text-teal-300 hover:bg-gradient-to-r hover:from-teal-500/5 hover:to-transparent transition-all duration-200 rounded-lg"
+                                  onClick={() => setOpen(false)}
                                 >
-                                  {sub.title}
+                                  <span className="flex items-center gap-2">
+                                    <div className="w-1 h-1 bg-teal-400 rounded-full"></div>
+                                    {sub.title}
+                                  </span>
                                 </Link>
                               </li>
                             ))}
                           </ul>
                         )}
-                      </>
+                      </div>
                     ) : (
                       <Link
                         href={item.href}
-                        className="font-medium text-teal-700"
+                        className="flex items-center gap-3 p-4 font-medium text-gray-200 hover:bg-gradient-to-r hover:from-teal-500/10 hover:to-teal-600/10 hover:text-teal-300 transition-all duration-200 rounded-xl group"
+                        onClick={() => setOpen(false)}
                       >
+                        <div className="w-2 h-2 bg-gradient-to-r from-teal-400 to-teal-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
                         {item.title}
                       </Link>
                     )}
@@ -360,13 +388,27 @@ const savedCount = notes.length + papers.length;
             )}
 
             {/* Auth */}
-            <div className="pt-4 border-t flex flex-col gap-2">
+            <div className="pt-6 border-t border-teal-500/20 flex flex-col gap-3">
               {isLoggedIn ? (
-                <LogoutButton />
+                <div className="p-1">
+                  <LogoutButton />
+                </div>
               ) : (
                 <>
-                  <Link href="/login" className="w-full rounded-xl bg-gradient-to-r from-teal-400 to-teal-700 py-3 text-center text-base font-semibold text-white shadow-lg hover:opacity-90 transition ">Login</Link>
-                  <Link href="/register" className="w-full rounded-xl bg-gradient-to-r from-teal-400 to-teal-700 py-3 text-center text-base font-semibold text-white shadow-lg hover:opacity-90 transition ">Register</Link>
+                  <Link 
+                    href="/login" 
+                    className="w-full rounded-xl bg-gradient-to-r from-teal-500 via-teal-600 to-teal-700 py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-teal-500/25 hover:shadow-xl hover:shadow-teal-500/40 hover:from-teal-600 hover:via-teal-700 hover:to-teal-800 transform hover:scale-[1.02] transition-all duration-200"
+                    onClick={() => setOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    href="/register" 
+                    className="w-full rounded-xl border-2 border-teal-500/50 bg-teal-500/10 py-3.5 text-center text-base font-semibold text-teal-300 hover:bg-teal-500/20 hover:border-teal-400 transform hover:scale-[1.02] transition-all duration-200"
+                    onClick={() => setOpen(false)}
+                  >
+                    Register
+                  </Link>
                 </>
               )}
             </div>

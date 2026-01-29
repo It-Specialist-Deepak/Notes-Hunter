@@ -40,7 +40,7 @@ export const toggleLikePaper = createAsyncThunk(
     try {
       // Get userId from localStorage
       const userId = localStorage.getItem('userId');
-      
+
       if (!userId) {
         return rejectWithValue({
           message: "Please login to like this paper",
@@ -59,7 +59,7 @@ export const toggleLikePaper = createAsyncThunk(
       const response = await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/paper/like-paper`,
         { paperId, userId },
-        { 
+        {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json'
@@ -81,11 +81,38 @@ export const toggleLikePaper = createAsyncThunk(
     }
   }
 );
+// toggle save paper
+export const toggleSavePaper = createAsyncThunk(
+  'papers/toggleSave',
+  async ({ paperId }, { rejectWithValue }) => {
+    try {
+      const userId = localStorage.getItem('userId');
+
+      if (!userId) {
+        return rejectWithValue({
+          message: "Please login to like this paper",
+          status: 401,
+          shouldRedirect: true
+        });
+      }
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/paper/save-papers`,
+        { paperId, userId },
+        { withCredentials: true }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Error saving paper');
+    }
+  }
+);
 /* ================= SLICE ================= */
 const previewPapersSlice = createSlice({
   name: "previewPapers",
   initialState: {
     /* Preview paper */
+    savedPaperIds: [],
     paper: null,
     loading: false,
     error: null,
@@ -173,6 +200,23 @@ const previewPapersSlice = createSlice({
 
         // action.payload may be undefined if something went wrong
         state.error = action.payload || { message: "Something went wrong", status: 500 };
+      })
+      .addCase(toggleSavePaper.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(toggleSavePaper.fulfilled, (state, action) => {
+        state.loading = false;
+        const { saved, paperId } = action.payload;
+        if (saved) {
+          state.savedPaperIds.push(paperId);
+        } else {
+          state.savedPaperIds = state.savedPaperIds.filter(id => id !== paperId);
+        }
+      })
+      .addCase(toggleSavePaper.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to save paper';
       });
 
 

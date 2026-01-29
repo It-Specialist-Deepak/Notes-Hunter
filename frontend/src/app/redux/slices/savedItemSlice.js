@@ -4,23 +4,42 @@ import axios from 'axios';
 
 // Async thunks
 export const fetchSavedItems = createAsyncThunk(
-  'savedItems/fetchAll',
-  async (_, { rejectWithValue }) => {
+  'savedItems/fetch',
+  async ({ type }, { rejectWithValue }) => {
     try {
-      const [notesResponse, papersResponse] = await Promise.all([
+      if (type === 'papers') {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/paper/saved-papers`,
+          { withCredentials: true }
+        );
+        return { type: 'papers', data: res.data || [] };
+      }
+
+      if (type === 'notes') {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/notes/saved-notes`,
+          { withCredentials: true }
+        );
+        return { type: 'notes', data: res.data || [] };
+      }
+
+      // fallback → fetch both
+      const [notesRes, papersRes] = await Promise.all([
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/notes/saved-notes`, { withCredentials: true }),
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/paper/saved-papers`, { withCredentials: true })
       ]);
-      
+
       return {
-        notes: notesResponse.data || [],
-        papers: papersResponse.data || []
+        type: 'all',
+        notes: notesRes.data || [],
+        papers: papersRes.data || []
       };
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch saved items');
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to fetch saved items');
     }
   }
 );
+
 
 
 const savedItemsSlice = createSlice({
@@ -46,14 +65,28 @@ const savedItemsSlice = createSlice({
       })
       .addCase(fetchSavedItems.fulfilled, (state, action) => {
         state.loading = false;
-        state.notes = action.payload.notes;
-        state.papers = action.payload.papers;
+
+        const { type } = action.payload;
+
+        if (type === 'papers') {
+          state.papers = action.payload.data;
+        }
+
+        if (type === 'notes') {
+          state.notes = action.payload.data;
+        }
+
+        if (type === 'all') {
+          state.notes = action.payload.notes;
+          state.papers = action.payload.papers;
+        }
       })
+
       .addCase(fetchSavedItems.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-     
+
   }
 });
 

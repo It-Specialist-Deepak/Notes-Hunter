@@ -31,7 +31,7 @@ router.get("/getpapers-bycategory/:category", GetPapersByCategory);
 // other common Routes
 router.patch("/like-paper", verifyToken, LikePapers);
 router.get("/download-paper/:paperId", DownloadPaper);
-router.post("/save-papers/:paperId", verifyToken, SavePaper);
+router.post("/save-papers", verifyToken, SavePaper);
 router.get("/saved-papers", verifyToken, getSavedpapers);
 router.get("/recommended-papers/:paperId" ,  getRecommendedPapers);
 module.exports = router;

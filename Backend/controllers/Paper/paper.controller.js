@@ -78,7 +78,7 @@ module.exports.PreviewPapers = async (req, res) => {
         message: "Paper not found",
       });
     }
-   
+
     res.status(200).json({
       success: true,
       data: paper,
@@ -329,7 +329,7 @@ module.exports.GetPapersByCategory = async (req, res) => {
 
 module.exports.LikePapers = async (req, res) => {
   try {
-    const { userId , paperId } = req.body; // ✅ from request body
+    const { userId, paperId } = req.body; // ✅ from request body
 
     // Validate paperId
     if (!userId || !paperId) {
@@ -411,43 +411,64 @@ module.exports.DownloadPaper = async (req, res) => {
 
 module.exports.SavePaper = async (req, res) => {
   try {
-    const { paperId } = req.params;
-    const user = await User.findById(req.user._id);
+    const { paperId, userId } = req.body;
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!userId || !paperId) {
+      return res
+        .status(401)
+        .json({ message: "UserId or PaperId not received" });
+    }
 
-    // Check if note exists
+    // ✅ Fetch user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Check if paper exists
     const paperExists = await PreviousYearPaper.findById(paperId);
-    if (!paperExists)
+    if (!paperExists) {
       return res.status(404).json({ message: "Paper not found" });
+    }
 
-    // Check if note is already saved
-    const alreadySaved = user.savedPapers.includes(paperId);
+    // ✅ Ensure savedPapers exists
+    if (!Array.isArray(user.savedPapers)) {
+      user.savedPapers = [];
+    }
+
+    // ✅ Check already saved
+    const alreadySaved = user.savedPapers.some(
+      (id) => id.toString() === paperId.toString()
+    );
 
     if (alreadySaved) {
-      // Remove note from saved list
+      // ❌ Remove paper
       user.savedPapers = user.savedPapers.filter(
         (id) => id.toString() !== paperId.toString()
       );
+
       await user.save();
+
       return res.json({
         message: "Paper removed from saved list",
         saved: false,
       });
     } else {
-      // Add note to saved list
+      // ✅ Add paper
       user.savedPapers.push(paperId);
       await user.save();
+
       return res.json({
         message: "Paper saved successfully",
         saved: true,
       });
     }
   } catch (error) {
-    console.error("Toggle Save Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Toggle Save Paper Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 module.exports.getSavedpapers = async (req, res) => {
   try {

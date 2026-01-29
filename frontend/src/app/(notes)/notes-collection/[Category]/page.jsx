@@ -15,7 +15,7 @@ const stats = [
 const notes = Array.from({ length: 8 });
 
 export default function CategoryNotes() {
-       const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
     return (
         <div className="min-h-screen bg-gradient-to-br 
 from-[#081a2d] 
@@ -39,12 +39,12 @@ to-[#061622]
                         </p>
 
                         {/* SEARCH */}
-                         {/* SEARCH */} <div className="flex items-center gap-3 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full p-4 max-w-xl"> 
-                                                <Search className="ml-4 text-white/60" size={20} />
-                                                 <input type="text"   value={searchTerm}
-                                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                                 placeholder="Search notes, PDFs" className="flex-1 bg-transparent outline-none px-2 text-sm text-white" />
-                                                 </div>
+                        {/* SEARCH */} <div className="flex items-center gap-3 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full p-4 max-w-xl">
+                            <Search className="ml-4 text-white/60" size={20} />
+                            <input type="text" value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search notes, PDFs" className="flex-1 bg-transparent outline-none px-2 text-sm text-white" />
+                        </div>
                     </div>
 
                     {/* RIGHT STATS */}

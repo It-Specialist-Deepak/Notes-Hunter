@@ -2,11 +2,11 @@
 "use client";
 import React from "react";
 import { FaFileAlt, FaDownload, FaHeart, FaClock  , } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { useDispatch , useSelector } from "react-redux";
 import { useRouter , usePathname } from "next/navigation";
-import { setPreviewNoteId } from "@/app/redux/slices/previewNotes";
+import { setPreviewNoteId , downloadNote } from "@/app/redux/slices/previewNotes";
 export default function RecommendedNoteCard({ note , category }) {
-     const dispatch = useDispatch();
+    const dispatch = useDispatch();
     const router = useRouter();
     const pathname = usePathname(); // Current route
   
@@ -24,6 +24,21 @@ export default function RecommendedNoteCard({ note , category }) {
       router.push(`/browse-notes/${note._id}`);
     }
   };
+    // 🔹 Redux state
+  const {
+    loading: downloadLoading,
+  } = useSelector((state) => state.previewNotes);
+   const handleDownload = async (noteId) => {
+      const result = await dispatch(downloadNote(noteId));
+  
+      if (downloadNote.fulfilled.match(result)) {
+        const link = document.createElement("a");
+        link.href = result.payload;
+        link.target = "_blank";
+        link.click();
+      }
+    };
+  
   return (
   <div
   className="w-full max-w-sm rounded-3xl p-6
@@ -82,16 +97,16 @@ export default function RecommendedNoteCard({ note , category }) {
     Preview
   </button>
 
-    <a
-      href={note.fileUrl}
-      download
+    <button
+      onClick={() => handleDownload(note._id)}
+                    disabled={downloadLoading}
       className="flex items-center gap-2 px-5 py-2 rounded-full
                  border-2 border-teal-400 text-teal-300
                  hover:bg-teal-400 hover:text-black
                  transition font-medium"
     >
       <FaDownload /> Download
-    </a>
+    </button>
   </div>
 </div>
 

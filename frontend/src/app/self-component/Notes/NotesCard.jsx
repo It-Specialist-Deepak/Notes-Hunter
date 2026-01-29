@@ -20,6 +20,8 @@ import {
   downloadNote,
   toggleSaveNote,
 } from "../../redux/slices/previewNotes";
+import { fetchSavedItems } from "../../redux/slices/savedItemSlice";
+import toast from "react-hot-toast";
 
 import useDebounce from "@/app/hooks/useDebounce";
 import Pagination from "./HomeNotesPagination";
@@ -44,11 +46,20 @@ function NotesSection({ searchQuery }) {
   const debouncedSearch = useDebounce(searchQuery, 800);
 
   // 🔹 Redux state
+  const { savedItems } = useSelector((state) => state.savedItems);
+  const savedNotes = savedItems?.notes || [];
   const {
-    savedNoteIds = [],
-    saveLoading,
     loading: downloadLoading,
   } = useSelector((state) => state.previewNotes);
+
+  // Load saved notes when component mounts
+  useEffect(() => {
+    dispatch(fetchSavedItems({ type: 'notes' }));
+  }, []);
+
+  const isNoteSaved = (noteId) => {
+    return savedNotes?.some(savedNote => savedNote._id === noteId);
+  };
 
   /* ================= FETCH NOTES ================= */
   useEffect(() => {
@@ -92,10 +103,19 @@ function NotesSection({ searchQuery }) {
 
   /* ================= HANDLERS ================= */
 
-  const handleSave = (noteId) => {
-    console.log(noteId);
-    if (!saveLoading) {
-      dispatch(toggleSaveNote({ noteId }));
+  const handleSave = async (noteId) => {
+    try {
+      const result = await dispatch(toggleSaveNote({ noteId }));
+      
+      if (toggleSaveNote.fulfilled.match(result)) {
+        const { saved } = result.payload;
+        toast.success(saved ? "Note saved" : "Note removed");
+        // Refresh the saved items list
+        dispatch(fetchSavedItems({ type: 'notes' }));
+      }
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast.error(error?.message || "Failed to save note");
     }
   };
 
@@ -125,8 +145,7 @@ function NotesSection({ searchQuery }) {
           <HomeCardSkeleton count={8} />
         ) : (
           notes.map((note) => {
-            const isSaved = savedNoteIds.includes(note._id);
-            console.log("issaved " , isSaved , note._id)
+            const isSaved = isNoteSaved(note._id);
             return (
               <div
                 key={note._id}
@@ -148,13 +167,11 @@ function NotesSection({ searchQuery }) {
 
                   <button
                     onClick={() => handleSave(note._id)}
-                    disabled={saveLoading}
                     title={isSaved ? "Remove from saved" : "Save note"}
                     className={`
     p-2 rounded-full
     transition-all duration-300
     hover:scale-110
-    disabled:opacity-50 disabled:cursor-not-allowed
     ${isSaved ? "bg-red-500/10" : "bg-white/5"}
     
   `}
