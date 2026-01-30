@@ -1,6 +1,7 @@
-"use client"
-import React, { useState, Suspense } from "react";
-import NotesCard from "./NotesCard"
+"use client";
+
+import React, { useState } from "react";
+import NotesCard from "../../self-component/Notes/NotesCard"
 import { Search, FileText, Download, Eye } from "lucide-react";
 
 const stats = [
@@ -8,11 +9,13 @@ const stats = [
     { icon: Download, value: "3,887", label: "Downloads" },
     { icon: Eye, value: "10,627", label: "Views" },
 ];
+
 const notes = Array.from({ length: 8 });
-const BrowseNotesClient = () => {
-     const [searchQuery, setSearchQuery] = useState("");
-  return (
-      <div className="min-h-screen bg-gradient-to-br 
+
+export default function BrowseNotesClient() {
+    const [searchQuery, setSearchQuery] = useState("");
+    return (
+        <div className="min-h-screen bg-gradient-to-br 
 from-[#081a2d] 
 via-[#0b3a4a] 
 to-[#061622]
@@ -67,17 +70,9 @@ to-[#061622]
                     <div className="mb-8">
                     <h2 className="text-2xl font-bold  text-center md:text-start">Latest Notes</h2>
                     </div>
-                    <Suspense fallback={
-                        <div className="flex justify-center items-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
-                        </div>
-                    }>
-                        <NotesCard searchQuery={searchQuery} />
-                    </Suspense>
+                    <NotesCard searchQuery={searchQuery} />
                 </div>
             </section>
         </div>
-  )
+    );
 }
-
-export default BrowseNotesClient
