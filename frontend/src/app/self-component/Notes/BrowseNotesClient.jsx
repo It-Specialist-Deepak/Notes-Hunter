@@ -1,6 +1,6 @@
 "use client"
-import React, { useState } from "react";
-import NotesCardWithSuspense from "./NotesCardWithSuspense"
+import React, { useState, Suspense } from "react";
+import NotesCard from "./NotesCard"
 import { Search, FileText, Download, Eye } from "lucide-react";
 
 const stats = [
@@ -67,7 +67,13 @@ to-[#061622]
                     <div className="mb-8">
                     <h2 className="text-2xl font-bold  text-center md:text-start">Latest Notes</h2>
                     </div>
-                    <NotesCardWithSuspense searchQuery={searchQuery} />
+                    <Suspense fallback={
+                        <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
+                        </div>
+                    }>
+                        <NotesCard searchQuery={searchQuery} />
+                    </Suspense>
                 </div>
             </section>
         </div>
