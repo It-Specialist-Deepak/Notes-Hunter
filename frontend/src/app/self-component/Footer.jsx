@@ -7,16 +7,20 @@ import {
   FaLinkedinIn,
   FaInstagram,
 } from "react-icons/fa";
-import { 
-  BookOpen, 
-  Mail, 
-  MapPin, 
-  Phone, 
+import {
+  BookOpen,
+  Mail,
+  MapPin,
+  Phone,
   ArrowRight,
   Heart,
   Sparkles
 } from "lucide-react";
 import Link from "next/link";
+
+
+const MotionLink = motion.create(Link);
+
 
 // Floating particle animation
 const FloatingParticle = ({ delay, duration, position }) => (
@@ -45,16 +49,17 @@ const SocialIcon = ({ Icon, href, hoverColor, delay }) => (
     viewport={{ once: true }}
     transition={{ duration: 0.3, delay }}
   >
-    <motion.a
+    <MotionLink
       href={href}
       whileHover={{ scale: 1.15, y: -3 }}
       whileTap={{ scale: 0.95 }}
       className={`flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white border border-white/20 ${hoverColor} transition-all duration-300 shadow-lg hover:shadow-xl`}
     >
       <Icon size={18} />
-    </motion.a>
+    </MotionLink>
   </motion.li>
 );
+
 
 // Footer link component with animation
 const FooterLink = ({ href, children, delay }) => (
@@ -63,17 +68,18 @@ const FooterLink = ({ href, children, delay }) => (
     whileInView={{ opacity: 1, x: 0 }}
     viewport={{ once: true }}
     transition={{ duration: 0.3, delay }}
+    whileHover={{ x: 5 }}   // ✅ motion prop here
   >
     <Link
       href={href}
       className="group flex justify-center md:justify-start items-center gap-2 text-gray-400 hover:text-teal-400 transition-colors duration-300"
-      whileHover={{ x: 5 }}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-teal-400/0 group-hover:bg-teal-400 transition-colors duration-300" />
       {children}
     </Link>
   </motion.li>
 );
+
 
 // Section heading component
 const SectionHeading = ({ children, delay }) => (
@@ -93,7 +99,7 @@ export default function Footer() {
 
   return (
     <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-      
+
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Large gradient orbs */}
@@ -139,12 +145,12 @@ export default function Footer() {
 
       {/* Main Footer Content */}
       <div className="relative z-10 container mx-auto px-4 py-16 md:py-20">
-        
-       
+
+
 
         {/* Main Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 mb-12">
-          
+
           {/* Column 1 - Brand */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -164,29 +170,29 @@ export default function Footer() {
                 Notes Hunter
               </h2>
             </motion.div>
-            
+
             <p className="text-gray-400 mb-6 leading-relaxed">
-              Empowering students and educators to share knowledge through our digital platform. 
+              Empowering students and educators to share knowledge through our digital platform.
               Join our community and discover valuable study materials from around the world.
             </p>
 
             {/* Contact Info */}
             <div className="space-y-3 mb-6">
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-center md:justify-start gap-3 text-gray-400"
                 whileHover={{ x: 5 }}
               >
                 <Mail className="w-4 h-4 text-teal-400" />
                 <span className="text-sm">contact@noteshunter.com</span>
               </motion.div>
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-center md:justify-start gap-3 text-gray-400"
                 whileHover={{ x: 5 }}
               >
                 <Phone className="w-4 h-4 text-teal-400" />
                 <span className="text-sm">+91 8449011426</span>
               </motion.div>
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-center md:justify-start gap-3 text-gray-400"
                 whileHover={{ x: 5 }}
               >
@@ -216,7 +222,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <FooterLink href="/browse-notes" delay={0.25}>Browse Collection</FooterLink>
               <FooterLink href="/notes-collection" delay={0.3}>Categories</FooterLink>
-             
+
             </ul>
           </motion.div>
 
@@ -232,7 +238,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <FooterLink href="/browse-papers" delay={0.35}>Browse Papers</FooterLink>
               <FooterLink href="/papers-collection" delay={0.4}>Collection</FooterLink>
-              
+
             </ul>
           </motion.div>
 
@@ -256,7 +262,7 @@ export default function Footer() {
           </motion.div>
 
           {/* Column 5 - Support */}
-          
+
         </div>
 
         {/* Divider with gradient */}
@@ -277,7 +283,7 @@ export default function Footer() {
           className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left"
         >
           <p className="text-gray-400 text-sm flex items-center gap-2 justify-center">
-            &copy; {currentYear} Notes Hunter. Made with 
+            &copy; {currentYear} Notes Hunter. Made with
             <motion.span
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
@@ -286,7 +292,7 @@ export default function Footer() {
             </motion.span>
             in India. All rights reserved.
           </p>
-          
+
           <ul className="flex gap-6 justify-center md:justify-end">
             {["Privacy", "Security", "Terms"].map((item, index) => (
               <motion.li
@@ -296,13 +302,14 @@ export default function Footer() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
               >
-                <motion.a
-                  href="#!"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300 text-sm font-medium"
+                <MotionLink
+                  href="/privacy"   // or "#!" if placeholder
                   whileHover={{ y: -2 }}
+                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300 text-sm font-medium"
                 >
                   {item}
-                </motion.a>
+                </MotionLink>
+
               </motion.li>
             ))}
           </ul>
