@@ -159,10 +159,14 @@ const NavBar = ({ isLoggedIn }) => {
         )}
 
 
-        {["Courses", "About Us", "Blogs"].map((item) => (
-          <NavigationMenuItem key={item}>
+        {[
+          { name: "Courses", href: "/courses" },
+          { name: "About Us", href: "/about" },
+          { name: "Blogs", href: "/blog" }
+        ].map((item) => (
+          <NavigationMenuItem key={item.name}>
             <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-              <Link href="/docs">{item}</Link>
+              <Link href={item.href}>{item.name}</Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
         ))}
