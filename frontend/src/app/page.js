@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Feature11 from "./self-component/Home/Feature.jsx";
 import Hero from "./self-component/Home/HeroSection.jsx";
 import NotesCard from "./self-component/Notes/NotesCard.jsx";
@@ -21,7 +22,13 @@ to-[#061622] py-16 px-4">
             Browse through the latest notes shared by students and educators.
           </p>
         </div>
-      <NotesCard />
+      <Suspense fallback={
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
+        </div>
+      }>
+        <NotesCard />
+      </Suspense>
       </div>
       </section>
       <PYPCollection />
