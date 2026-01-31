@@ -19,7 +19,7 @@ const {
   getRecommendedPapers
 } = require("../../controllers/Paper/paper.controller");
 // university view routes
-router.post("/upload-paper", verifyToken, uploadMiddleware, adminAuthMiddleware ,UploadPaper);
+router.post("/upload-paper", verifyToken, adminAuthMiddleware ,uploadMiddleware , UploadPaper);
 router.get("/preview-paper/:paperId", PreviewPapers)
 router.get("/all-universities", AllUniversities);
 router.get("/all-university-course/:university", AlluniversityCourse);

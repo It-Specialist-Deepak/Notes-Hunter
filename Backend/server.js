@@ -23,6 +23,7 @@ const NoteRoute = require("./routes/Notes/notes.route");
 const CommentRoute = require("./routes/comments/comments.route");
 const PaperRoute = require("./routes/Paper/paper.route");
 const AdminRoute = require("./routes/Admin/admin.route");
+const QuestionBankRoute = require("./routes/Questionbank/questionbank.route");
 
 // Routes
 app.use("/api/v1/user", AuthRoute);
@@ -30,7 +31,7 @@ app.use("/api/v1/notes", NoteRoute);
 app.use("/api/v1/comments", CommentRoute);
 app.use("/api/v1/paper", PaperRoute);
 app.use("/api/v1/admin", AdminRoute);
-
+app.use("/api/v1/questionbank", QuestionBankRoute);
 
 // Test route
 app.get("/", (req , res) => {
