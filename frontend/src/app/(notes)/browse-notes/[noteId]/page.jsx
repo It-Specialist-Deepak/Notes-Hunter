@@ -15,6 +15,12 @@ import {
   FaHeart,
   FaDownload,
   FaCommentDots,
+  FaShareAlt,
+  FaWhatsapp,
+  FaTelegram,
+  FaFacebook,
+  FaLinkedin,
+  FaCopy,
 } from "react-icons/fa";
 
 import RecommendedNotes from "@/app/self-component/Notes/RecommendedNotes";
@@ -41,6 +47,8 @@ export default function NotePreview() {
   const [userId, setUserId] = useState(null);
   const [role, setRole] = useState(null);
   const [showError, setShowError] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
 
   // Read user info from localStorage
   useEffect(() => {
@@ -77,6 +85,51 @@ export default function NotePreview() {
         // Redirect to login if not logged in
         router.push("/login");
       }
+    }
+  };
+
+  // Share handlers
+  const generateShareLink = () => {
+    return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/browse-notes/${noteId}`;
+  };
+
+  const handleCopyLink = async () => {
+    const link = generateShareLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      setShareLinkCopied(true);
+      setTimeout(() => setShareLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  const handleSocialShare = (platform) => {
+    if (!previewNote) return;
+    
+    const link = generateShareLink();
+    const title = previewNote.title;
+    const text = `Check out this note: ${title}`;
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + link)}`;
+        break;
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`;
+        break;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
     }
   };
 
@@ -184,30 +237,120 @@ export default function NotePreview() {
 
           {/* Actions */}
           <div className="flex items-center justify-between px-6 sm:px-10 py-6">
-            <button
-              onClick={handleLike}
-              disabled={likeLoading}
-              className="flex items-center gap-2 transition"
-            >
-              <FaHeart
-                className={`text-lg cursor-pointer transition-all duration-300 ease-out ${
-                  isLiked
-                    ? "text-pink-500 scale-110 drop-shadow-[0_0_6px_rgba(236,72,153,0.7)]"
-                    : "text-white hover:scale-110"
-                }`}
-              />
-              <span className="font-medium">{previewNote.likes}</span>
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleLike}
+                disabled={likeLoading}
+                className="flex items-center gap-2 transition"
+              >
+                <FaHeart
+                  className={`text-lg cursor-pointer transition-all duration-300 ease-out ${
+                    isLiked
+                      ? "text-pink-500 scale-110 drop-shadow-[0_0_6px_rgba(236,72,153,0.7)]"
+                      : "text-white hover:scale-110"
+                  }`}
+                />
+                <span className="font-medium">{previewNote.likes}</span>
+              </button>
+
+              <button
+                onClick={() => setShowSharePopup(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition hover:cursor-pointer"
+              >
+                <FaShareAlt className="text-white hover:scale-110 transition" />
+                <span className="font-medium">Share</span>
+              </button>
+            </div>
 
             <button
               onClick={handleDownload}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-500 text-sm font-semibold hover:scale-105 hover:shadow-lg transition"
             >
               <FaDownload />
-              Download Notes
+              Download
             </button>
           </div>
         </div>
+
+        {/* Share Popup */}
+        {showSharePopup && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+            <div className="bg-gradient-to-br from-[#0b1120] to-[#0e1628] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full flex items-center justify-center">
+                    <FaShareAlt className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-lg">Share This Note</h3>
+                    <p className="text-white/60 text-sm">Share this amazing note with others</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSharePopup(false)}
+                  className="text-white/60 hover:text-white transition hover:cursor-pointer"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                  <p className="text-white/80 text-sm mb-2">Share link:</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={generateShareLink()}
+                      readOnly
+                      className="flex-1 bg-white/10 text-white text-sm px-3 py-2 rounded border border-white/20 focus:outline-none focus:border-teal-400"
+                    />
+                    <button
+                      onClick={handleCopyLink}
+                      className="p-2 bg-teal-500 hover:bg-teal-600 rounded-lg transition hover:cursor-pointer"
+                    >
+                      <FaCopy className="text-white" />
+                    </button>
+                  </div>
+                  {shareLinkCopied && (
+                    <p className="text-teal-400 text-xs mt-2">Link copied to clipboard!</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-white/80 text-sm mb-3">Share on social media:</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleSocialShare('whatsapp')}
+                    className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center transition"
+                  >
+                    <FaWhatsapp className="text-white text-xl" />
+                  </button>
+                  <button
+                    onClick={() => handleSocialShare('telegram')}
+                    className="w-12 h-12 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center transition"
+                  >
+                    <FaTelegram className="text-white text-xl" />
+                  </button>
+                  <button
+                    onClick={() => handleSocialShare('facebook')}
+                    className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition"
+                  >
+                    <FaFacebook className="text-white text-xl" />
+                  </button>
+                  <button
+                    onClick={() => handleSocialShare('linkedin')}
+                    className="w-12 h-12 bg-blue-700 hover:bg-blue-800 rounded-full flex items-center justify-center transition"
+                  >
+                    <FaLinkedin className="text-white text-xl" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <RecommendedNotes noteId={previewNoteId} />
         <CommentBox noteId={previewNoteId} />

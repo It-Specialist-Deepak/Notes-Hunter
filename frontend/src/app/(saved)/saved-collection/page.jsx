@@ -20,7 +20,7 @@ const SavedCollection = () => {
   useEffect(() => {
     dispatch(fetchSavedItems({ type: 'all' }));
   }, [dispatch]);
- 
+
   const handleRemoveItem = async (type, id) => {
     try {
       if (type === 'notes') {
@@ -96,24 +96,24 @@ const SavedCollection = () => {
     }
   };
 
-   // downlaod handler for paper
-    const handlepaperDownload = async (paperId) => {
-     
-      try {
-        const result = await dispatch(downloadPaper(paperId)); // Directly pass paperId as string
-        if (downloadPaper.fulfilled.match(result)) {
-          const downloadUrl = result.payload?.downloadUrl;
-          if (downloadUrl) {
-            console.log("Opening download URL:", downloadUrl);
-            window.open(downloadUrl, '_blank');
-          } else {
-            console.error("No download URL in response");
-          }
+  // downlaod handler for paper
+  const handlepaperDownload = async (paperId) => {
+
+    try {
+      const result = await dispatch(downloadPaper(paperId)); // Directly pass paperId as string
+      if (downloadPaper.fulfilled.match(result)) {
+        const downloadUrl = result.payload?.downloadUrl;
+        if (downloadUrl) {
+          console.log("Opening download URL:", downloadUrl);
+          window.open(downloadUrl, '_blank');
+        } else {
+          console.error("No download URL in response");
         }
-      } catch (error) {
-        console.error("Download failed:", error);
       }
-    };
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
   // Show loading state
   if (loading) {
     return (
@@ -226,7 +226,7 @@ const SavedCollection = () => {
                         {/* Left section */}
                         <div className="flex items-center gap-3">
                           <button
-                            onClick={() =>handleNoteDownload(note._id)}
+                            onClick={() => handleNoteDownload(note._id)}
                             className="inline-flex items-center hover:cursor-pointer gap-2 px-4 py-2 
           bg-teal-500/15 text-teal-400 
           rounded-lg border border-teal-500/30
@@ -265,69 +265,69 @@ const SavedCollection = () => {
                 </div>
               )
             ) : papers?.length > 0 ? (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  {papers.map((paper) => (
-    <motion.div
-      key={paper._id}
-      whileHover={{ x: 5 }}
-      onClick={() => router.push(`/browse-papers/${paper.category}/${paper._id}`)}
-      className="group bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-amber-500/30 transition-all"
-    >
-      <div  className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left content */}
-        <div>
-          <h3 className="text-xl font-semibold text-white group-hover:text-amber-400 transition-colors">
-            {paper.title}
-          </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {papers.map((paper) => (
+                  <motion.div
+                    key={paper._id}
+                    whileHover={{ x: 5 }}
+                    onClick={() => router.push(`/browse-papers/${paper.category}/${paper._id}`)}
+                    className="group bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-amber-500/30 transition-all"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      {/* Left content */}
+                      <div>
+                        <h3 className="text-xl font-semibold text-white group-hover:text-amber-400 transition-colors">
+                          {paper.title}
+                        </h3>
 
-          <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-400">
-            {paper.university && (
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                {paper.university}
-              </span>
-            )}
+                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-400">
+                          {paper.university && (
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                              {paper.university}
+                            </span>
+                          )}
 
-            {paper.course && (
-              <>
-                <span>•</span>
-                <span>{paper.course}</span>
-              </>
-            )}
+                          {paper.course && (
+                            <>
+                              <span>•</span>
+                              <span>{paper.course}</span>
+                            </>
+                          )}
 
-            {paper.author && (
-              <>
-                <span>•</span>
-                <span>{paper.author}</span>
-              </>
-            )}
-          </div>
-        </div>
+                          {paper.author && (
+                            <>
+                              <span>•</span>
+                              <span>{paper.author}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 shrink-0">
-          <button
-            onClick={() => handlepaperDownload(paper._id)}
-            className="px-4 py-2 bg-amber-600/20 text-amber-400 rounded-lg hover:cursor-pointer hover:bg-amber-600/30 transition-colors flex items-center gap-2"
-          >
-            <FiDownload size={16} />
-            <span>Download</span>
-          </button>
+                      {/* Actions */}
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => handlepaperDownload(paper._id)}
+                          className="px-4 py-2 bg-amber-600/20 text-amber-400 rounded-lg hover:cursor-pointer hover:bg-amber-600/30 transition-colors flex items-center gap-2"
+                        >
+                          <FiDownload size={16} />
+                          <span>Download</span>
+                        </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRemoveItem("papers", paper._id);
-            }}
-            className="p-2 text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700/50 transition-colors"
-          >
-            <FiTrash2 />
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  ))}
-</div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveItem("papers", paper._id);
+                          }}
+                          className="p-2 text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700/50 transition-colors"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
 
             ) : (
               <div className="text-center py-16 bg-gray-800/30 rounded-2xl border-2 border-dashed border-gray-700">

@@ -53,8 +53,17 @@ const NavBar = ({ isLoggedIn }) => {
         { title: "Collection", href: "papers-collection" },
       ],
     },
+     {
+    title: "Admin",
+    roles: ["admin"], // 🔒 only admin
+    subItems: [
+      { title: "Dashboard", href: "/admindashboard" },
+      { title: "Upload Section", href: "/upload" },
+    ],
+  },
+    { title: "Question Bank", href: "/browse-questionbank" },
     { title: "Courses", href: "/docs" },
-    { title: "About Us", href: "/docs" },
+    { title: "About Us", href: "/about" },
     { title: "Blogs", href: "/docs" },
   ];
   const [openMenus, setOpenMenus] = useState({});
@@ -160,6 +169,7 @@ const NavBar = ({ isLoggedIn }) => {
 
 
         {[
+          { name: "Question Banks", href: "/browse-questionbank" },
           { name: "Courses", href: "/courses" },
           { name: "About Us", href: "/about" },
           { name: "Blogs", href: "/blog" }
@@ -188,7 +198,7 @@ const NavBar = ({ isLoggedIn }) => {
   `}
       >
 
-        <div className="mx-auto flex justify-around h-20 max-w-7xl items-center px-4">
+        <div className="mx-auto flex justify-between h-20 max-w-8xl items-center px-5">
           {/* LOGO */}
          <Link href="/" className="flex items-center gap-3">
   <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-teal-600 rounded-lg flex items-center justify-center shadow-md shadow-emerald-500/30">
@@ -203,7 +213,7 @@ const NavBar = ({ isLoggedIn }) => {
 
 
           {/* DESKTOP NAV */}
-          <div className="ml-auto hidden md:flex items-center gap-8">
+          <div className="ml-auto hidden md:flex items-center gap-5">
             {desktopMenu}
             {isLoggedIn ? (
               <div className="relative">
@@ -336,60 +346,71 @@ const NavBar = ({ isLoggedIn }) => {
             {!isMobile && desktopMenu}
 
             {/* Mobile Menu */}
-            {isMobile && (
-              <ul className="flex flex-col gap-2">
-                {mobileMenuItems.map((item, idx) => (
-                  <li key={idx}>
-                    {item.subItems ? (
-                      <div className="overflow-hidden rounded-xl">
-                        <div
-                          className="flex justify-between items-center p-4 font-medium text-gray-200 cursor-pointer hover:bg-gradient-to-r hover:from-teal-500/10 hover:to-teal-600/10 transition-all duration-200 rounded-xl group"
-                          onClick={() => toggleMenu(item.title)}
-                        >
-                          <span className="flex items-center gap-3">
-                            <div className="w-2 h-2 bg-gradient-to-r from-teal-400 to-teal-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
-                            {item.title}
-                          </span>
-                          {openMenus[item.title] ? (
-                            <ChevronUp size={16} className="text-teal-400" />
-                          ) : (
-                            <ChevronDown size={16} className="text-gray-500 group-hover:text-teal-400 transition-colors" />
-                          )}
-                        </div>
+           {isMobile && (
+  <ul className="flex flex-col gap-2">
+    {mobileMenuItems
+      .filter(item => !item.roles || item.roles.includes(role))
+      .map((item, idx) => (
+        <li key={idx}>
+          {item.subItems ? (
+            <div className="overflow-hidden rounded-xl">
+              <div
+                className="flex justify-between items-center p-4 font-medium text-gray-200 cursor-pointer
+                           hover:bg-gradient-to-r hover:from-teal-500/10 hover:to-teal-600/10
+                           transition-all duration-200 rounded-xl group"
+                onClick={() => toggleMenu(item.title)}
+              >
+                <span className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-gradient-to-r from-teal-400 to-teal-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                  {item.title}
+                </span>
+                {openMenus[item.title] ? (
+                  <ChevronUp size={16} className="text-teal-400" />
+                ) : (
+                  <ChevronDown size={16} className="text-gray-500 group-hover:text-teal-400 transition-colors" />
+                )}
+              </div>
 
-                        {openMenus[item.title] && (
-                          <ul className="ml-4 mt-1 space-y-1 animate-in slide-in-from-top-2 duration-200">
-                            {item.subItems.map((sub, i) => (
-                              <li key={i}>
-                                <Link
-                                  href={sub.href}
-                                  className="block py-3 px-4 text-gray-300 hover:text-teal-300 hover:bg-gradient-to-r hover:from-teal-500/5 hover:to-transparent transition-all duration-200 rounded-lg"
-                                  onClick={() => setOpen(false)}
-                                >
-                                  <span className="flex items-center gap-2">
-                                    <div className="w-1 h-1 bg-teal-400 rounded-full"></div>
-                                    {sub.title}
-                                  </span>
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ) : (
-                      <Link
-                        href={item.href}
-                        className="flex items-center gap-3 p-4 font-medium text-gray-200 hover:bg-gradient-to-r hover:from-teal-500/10 hover:to-teal-600/10 hover:text-teal-300 transition-all duration-200 rounded-xl group"
-                        onClick={() => setOpen(false)}
-                      >
-                        <div className="w-2 h-2 bg-gradient-to-r from-teal-400 to-teal-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
-                        {item.title}
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+              {openMenus[item.title] && (
+                <ul className="ml-4 mt-1 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                  {item.subItems
+                    .filter(sub => !sub.roles || sub.roles.includes(role))
+                    .map((sub, i) => (
+                      <li key={i}>
+                        <Link
+                          href={sub.href}
+                          className="block py-3 px-4 text-gray-300 hover:text-teal-300
+                                     hover:bg-gradient-to-r hover:from-teal-500/5 hover:to-transparent
+                                     transition-all duration-200 rounded-lg"
+                          onClick={() => setOpen(false)}
+                        >
+                          <span className="flex items-center gap-2">
+                            <div className="w-1 h-1 bg-teal-400 rounded-full"></div>
+                            {sub.title}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <Link
+              href={item.href}
+              className="flex items-center gap-3 p-4 font-medium text-gray-200
+                         hover:bg-gradient-to-r hover:from-teal-500/10 hover:to-teal-600/10
+                         hover:text-teal-300 transition-all duration-200 rounded-xl group"
+              onClick={() => setOpen(false)}
+            >
+              <div className="w-2 h-2 bg-gradient-to-r from-teal-400 to-teal-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+              {item.title}
+            </Link>
+          )}
+        </li>
+      ))}
+  </ul>
+)}
+
 
             {/* Auth */}
             <div className="pt-6 border-t border-teal-500/20 flex flex-col gap-3">

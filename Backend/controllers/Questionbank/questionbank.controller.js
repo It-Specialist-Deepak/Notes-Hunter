@@ -205,3 +205,55 @@ module.exports.getRecommendedQuestionBanks = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
+module.exports.likeQuestionBank = async (req, res) => {
+  try {
+    const { userId, questionBankId } = req.body;
+
+    // 1️⃣ Validate input
+    if (!userId || !questionBankId) {
+      return res.status(400).json({
+        message: "User ID and QuestionBank ID are required",
+      });
+    }
+
+    // 2️⃣ Find question bank
+    const questionBank = await QuestionBank.findById(questionBankId);
+    if (!questionBank) {
+      return res.status(404).json({ message: "Question bank not found" });
+    }
+
+    // 3️⃣ Check if already liked
+    const alreadyLiked = questionBank.likedBy.includes(userId);
+
+    if (alreadyLiked) {
+      // ✅ Unlike
+      questionBank.likes = Math.max(questionBank.likes - 1, 0);
+      questionBank.likedBy = questionBank.likedBy.filter(
+        (id) => id.toString() !== userId
+      );
+      await questionBank.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Question bank unliked successfully",
+        likes: questionBank.likes,
+      });
+    } else {
+      // ✅ Like
+      questionBank.likes += 1;
+      questionBank.likedBy.push(userId);
+      await questionBank.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Question bank liked successfully",
+        likes: questionBank.likes,
+      });
+    }
+  } catch (error) {
+    console.error("Error toggling question bank like:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

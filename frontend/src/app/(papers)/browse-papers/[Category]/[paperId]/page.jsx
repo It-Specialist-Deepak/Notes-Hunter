@@ -7,9 +7,13 @@ import { useParams, useRouter } from "next/navigation";
 import {
   FaFileAlt,
   FaDownload,
-  FaEye,
   FaHeart,
-
+  FaShareAlt,
+  FaWhatsapp,
+  FaTelegram,
+  FaFacebook,
+  FaLinkedin,
+  FaCopy,
   FaUniversity,
   FaBookOpen,
   FaCalendarAlt,
@@ -27,6 +31,8 @@ export default function PreviewPaperPage() {
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(false);
   const { paperId } = useParams();
+  const [showSharePopup, setShowSharePopup] = useState(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
 
   const {
     paper,
@@ -34,6 +40,51 @@ export default function PreviewPaperPage() {
     error,
     likeStatus
   } = useSelector((state) => state.previewPapers);
+
+  // Share handlers
+  const generateShareLink = () => {
+    return `${process.env.NEXT_PUBLIC_FRONTEND_URL}/browse-papers/${paper?.category}/${paperId}`;
+  };
+
+  const handleCopyLink = async () => {
+    const link = generateShareLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      setShareLinkCopied(true);
+      setTimeout(() => setShareLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  const handleSocialShare = (platform) => {
+    if (!paper) return;
+    
+    const link = generateShareLink();
+    const title = paper.title;
+    const text = `Check out this paper: ${title}`;
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + link)}`;
+        break;
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`;
+        break;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+  };
 
   // 🔁 Fetch if user directly opens URL
   useEffect(() => {
@@ -134,7 +185,7 @@ export default function PreviewPaperPage() {
       <div className="max-w-5xl mx-auto">
         <BreadcrumbPaperPreview category={paper.category} title={paper.title} />
         {/* Post Card */}
-        <div className="relative rounded-3xl bg-white/10 backdrop-blur-2xl border border-white/20 p-8 shadow-2xl ">
+        <div className="relative rounded-3xl bg-white/10 backdrop-blur-2xl border border-white/20 p-6 shadow-2xl ">
 
           {/* Category Badge */}
           <span className="absolute top-5 right-5 px-4 py-1 text-xs rounded-full
@@ -145,9 +196,9 @@ export default function PreviewPaperPage() {
 
           {/* Header */}
           <div className="flex gap-5 items-start">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center
               bg-gradient-to-br from-emerald-500/30 to-teal-500/30">
-              <FaFileAlt className="text-emerald-300 text-3xl" />
+              <FaFileAlt className="text-emerald-300 text-2xl md:text-3xl" />
             </div>
 
             <div className="flex-1">
@@ -174,20 +225,27 @@ export default function PreviewPaperPage() {
           </div>
 
           {/* Divider */}
-          <div className="my-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div className="my-3 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
           {/* Stats Row */}
           <div className="flex items-center justify-between flex-wrap gap-6">
 
             {/* Stats */}
             <div className="flex gap-6 text-sm">
-              <Stat icon={FaEye} value={paper.views} label="Views" />
               <Stat icon={FaDownload} value={paper.downloads} label="Downloads" />
               <Stat icon={FaHeart} value={paper.likes} label="Likes" />
+                {/* Share Button */}
+              <button
+                onClick={() => setShowSharePopup(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-gray-400 hover:text-white hover:cursor-pointer"
+              >
+                <FaShareAlt className="hover:scale-110 transition" />
+                <span>Share</span>
+              </button>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex justify-evenly ">
 
               {/* Like Button */}
               <button
@@ -216,6 +274,86 @@ export default function PreviewPaperPage() {
             </div>
           </div>
         </div>
+
+        {/* Share Popup */}
+        {showSharePopup && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+            <div className="bg-gradient-to-br from-[#081a2d] to-[#0b3a4a] border border-white/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
+                    <FaShareAlt className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-lg">Share This Paper</h3>
+                    <p className="text-white/60 text-sm">Share this amazing paper with others</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSharePopup(false)}
+                  className="text-white/60 hover:text-white transition hover:cursor-pointer"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                  <p className="text-white/80 text-sm mb-2">Share link:</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={generateShareLink()}
+                      readOnly
+                      className="flex-1 bg-white/10 text-white text-sm px-3 py-2 rounded border border-white/20 focus:outline-none focus:border-emerald-400"
+                    />
+                    <button
+                      onClick={handleCopyLink}
+                      className="p-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg transition hover:cursor-pointer"
+                    >
+                      <FaCopy className="text-white" />
+                    </button>
+                  </div>
+                  {shareLinkCopied && (
+                    <p className="text-emerald-400 text-xs mt-2">Link copied to clipboard!</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-white/80 text-sm mb-3">Share on social media:</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleSocialShare('whatsapp')}
+                    className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center transition"
+                  >
+                    <FaWhatsapp className="text-white text-xl" />
+                  </button>
+                  <button
+                    onClick={() => handleSocialShare('telegram')}
+                    className="w-12 h-12 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center transition"
+                  >
+                    <FaTelegram className="text-white text-xl" />
+                  </button>
+                  <button
+                    onClick={() => handleSocialShare('facebook')}
+                    className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition"
+                  >
+                    <FaFacebook className="text-white text-xl" />
+                  </button>
+                  <button
+                    onClick={() => handleSocialShare('linkedin')}
+                    className="w-12 h-12 bg-blue-700 hover:bg-blue-800 rounded-full flex items-center justify-center transition"
+                  >
+                    <FaLinkedin className="text-white text-xl" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <RecommendedPapers paperId={paperId} category={paper.category} />
     </div>
